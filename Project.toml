@@ -1,0 +1,13 @@
+name = "ShrodingerSolver"
+uuid = "088d78c7-8ee0-4fee-b6bf-4b401bb6aa5c"
+authors = ["walexaindre <walexaindre@hotmail.com\n> and contributors"]
+version = "1.0.0-Dev"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
