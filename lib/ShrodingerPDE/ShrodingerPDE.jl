@@ -1,3 +1,6 @@
+using .ExecutionBackend
+    
+
 include("types.jl")
 
 
@@ -36,3 +39,14 @@ end
 function get_end_time(PDE_Meta::ShrodingerPDEBase)
     PDE_Meta.T
 end
+
+function compute()
+
+   @static if (compute_backend=="CUDA")
+    println("Computing with CUDA")
+   else
+    println("Computing with CPU")
+   end 
+    
+end
+

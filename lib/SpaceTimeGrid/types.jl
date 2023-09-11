@@ -5,8 +5,8 @@ struct SpaceTimeGrid1D{DataType<:AbstractFloat,MetadataMesh<:MetaMesh} <: SpaceT
 
     metadata::MetadataMesh
 
-    const τ::DataType
-    const hx::DataType
+    τ::DataType
+    hx::DataType
 end
 
 
@@ -17,9 +17,9 @@ struct SpaceTimeGrid2D{DataType<:AbstractFloat,MetadataMesh<:MetaMesh} <: SpaceT
 
     metadata::MetadataMesh
 
-    const τ::DataType
-    const hx::DataType
-    const hy::DataType
+    τ::DataType
+    hx::DataType
+    hy::DataType
 end
 
 
@@ -31,8 +31,8 @@ struct SpaceTimeGrid3D{DataType<:AbstractFloat,MetadataMesh<:MetaMesh} <: SpaceT
 
     metadata::MetadataMesh
 
-    const τ::DataType
-    const hx::DataType
-    const hy::DataType
-    const hz::DataType
+    τ::DataType
+    hx::DataType
+    hy::DataType
+    hz::DataType
 end

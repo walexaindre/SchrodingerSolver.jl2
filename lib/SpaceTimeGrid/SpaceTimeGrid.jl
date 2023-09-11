@@ -1,5 +1,8 @@
 include("types.jl")
 
+
+compute()
+
 function get_τ(Grid::SpaceTimeGrid)
     Grid.τ
 end
