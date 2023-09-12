@@ -1,3 +1,5 @@
+export MetaMesh,MetaMesh1D,MetaMesh2D,MetaMesh3D
+
 abstract type MetaMesh end
 
 struct MetaMesh1D <: MetaMesh
@@ -20,3 +22,4 @@ struct MetaMesh3D <: MetaMesh
 
     MetaMesh3D(M::Int, N::Int, L::Int) = new(M, N, L, M * N)
 end
+

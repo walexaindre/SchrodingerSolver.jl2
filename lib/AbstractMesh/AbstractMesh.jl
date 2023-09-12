@@ -1,5 +1,7 @@
 include("types.jl")
 
+export linear_indexing, step, step_x, step_y, step_z, linear_size
+
 function linear_indexing(index::Int, metadata::MetaMesh1D)
     index
 end
@@ -24,9 +26,9 @@ function linear_indexing(x::Int, y::Int, metadata::MetaMesh2D)
 end
 
 function step(index::Int, lim::Int)
-    r1 = max(index - 1, 1)
-    r2 = min(index + 1, lim)
-    r1, r2
+    r1 = (index - 1 < 1) ? lim : index - 1
+    r2 = (index + 1 > lim) ? 1 : index + 1
+    (r1, r2)
 end
 
 function step_x(index::Int, metadata::MetaMesh)

@@ -1,8 +1,5 @@
 include("types.jl")
 
-
-compute()
-
 function get_τ(Grid::SpaceTimeGrid)
     Grid.τ
 end
@@ -30,3 +27,16 @@ end
 function get_element(Grid::SpaceTimeGrid3D, index_x::Int, index_y::Int,index_z::Int)
     Grid.Ωx[index_x], Grid.Ωy[index_y],Grid.Ωy[index_z]
 end
+
+function get_diameter(Grid::SpaceTimeGrid1D)
+    return Grid.hx
+end
+
+function get_diameter(Grid::SpaceTimeGrid2D)
+    return sqrt(Grid.hx^2+Grid.hy^2)   
+end
+
+function get_diameter(Grid::SpaceTimeGrid3D)
+    return sqrt(Grid.hx^2+Grid.hy^2+Grid.hz^2)    
+end
+
