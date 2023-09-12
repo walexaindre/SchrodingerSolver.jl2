@@ -1,4 +1,4 @@
-module ShrodingerSolver
+module SchrodingerSolver
 
 using Preferences
 using Base.Threads

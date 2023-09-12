@@ -2,7 +2,7 @@
 
 include("ComputeBackend/ComputeBackend.jl")
 include("AbstractMesh/AbstractMesh.jl")
-include("ShrodingerPDE/ShrodingerPDE.jl")
+include("SchrodingerPDE/SchrodingerPDE.jl")
 include("SpaceTimeGrid/SpaceTimeGrid.jl")
 include("Solver/Solver.jl")
 

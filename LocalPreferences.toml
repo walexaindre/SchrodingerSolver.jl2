@@ -1,2 +1,2 @@
-[ShrodingerSolver]
+[SchrodingerSolver]
 compute_backend = "CUDA"

@@ -1,4 +1,4 @@
-using ShrodingerSolver
+using SchrodingerSolver
 using CUDA
 using CUDA.CUSPARSE
 

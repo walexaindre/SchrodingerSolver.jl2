@@ -1,7 +1,7 @@
-abstract type ShrodingerPDEBase end
+abstract type SchrodingerPDEBase end
 
 "Generic handler for non polynomic potentials"
-struct ShrodingerPDENonPolynomic{DataType<:AbstractFloat,Fun1<:Function,Fun2<:Function} <: ShrodingerPDEBase
+struct SchrodingerPDENonPolynomic{DataType<:AbstractFloat,Fun1<:Function,Fun2<:Function} <: SchrodingerPDEBase
     boundaries::AbstractArray{DataType}
     σ::AbstractArray{DataType,1}
     f::Array{Fun1,1} #Component function
@@ -13,7 +13,7 @@ end
 
 
 "Optimized structure for polynomical potentials"
-struct ShrodingerPDEPolynomic{DataType<:AbstractFloat,Fun1<:Function,Fun2<:Function} <: ShrodingerPDEBase
+struct SchrodingerPDEPolynomic{DataType<:AbstractFloat,Fun1<:Function,Fun2<:Function} <: SchrodingerPDEBase
     boundaries::AbstractArray{DataType}
     σ::AbstractArray{DataType,1}
     N::Fun1 #Component function optimization
