@@ -1,5 +1,5 @@
 include("types.jl")
-
+export get_metadata
 function get_τ(Grid::SpaceTimeGrid)
     Grid.τ
 end
@@ -40,3 +40,6 @@ function get_diameter(Grid::SpaceTimeGrid3D)
     return sqrt(Grid.hx^2+Grid.hy^2+Grid.hz^2)    
 end
 
+function get_metadata(Grid::SpaceTimeGrid)
+    Grid.metadata
+end

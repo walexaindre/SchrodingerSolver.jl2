@@ -1,3 +1,5 @@
+export AbstractBackend,CPUBackend,CPUParallelBackend,GPUBackend,OpenCLBackend,CUDABackend,MetalBackend,AMDBackend
+
 abstract type AbstractBackend end
 
 abstract type CPUBackend <: AbstractBackend end

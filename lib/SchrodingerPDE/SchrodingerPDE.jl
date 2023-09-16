@@ -17,8 +17,8 @@ function eval_initial_condition(PDE_Meta::SchrodingerPDEBase, index::Int, argume
     PDE_Meta.ψ₀[index](arguments...)
 end
 
-function eval_optimized_potential(PDE_Meta::SchrodingerPDEPolynomic,prevIteration,nextIteration)
-    PDE_Meta.N(prevIteration,nextIteration)
+function eval_optimized_potential(PDE_Meta::SchrodingerPDEPolynomic,prevIteration,nextIteration,index)
+    PDE_Meta.N(prevIteration,nextIteration,index)
 end
 
 function eval_field(PDE_Meta::SchrodingerPDEBase, arguments...)

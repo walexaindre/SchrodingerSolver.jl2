@@ -1,3 +1,4 @@
+export SchrodingerPDEBase,SchrodingerPDENonPolynomic,SchrodingerPDEPolynomic
 abstract type SchrodingerPDEBase end
 
 "Generic handler for non polynomic potentials"
