@@ -6,5 +6,5 @@ using Aqua
     @testset "Code quality (Aqua.jl)" begin
         Aqua.test_all(SchrodingerSolver)
     end
-    # Write your tests here.
+    include("index.jl")
 end

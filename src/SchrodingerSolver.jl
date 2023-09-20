@@ -1,5 +1,5 @@
 module SchrodingerSolver
 
-# Write your package code here.
+include("./core/index.jl")
 
 end
