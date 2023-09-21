@@ -3,6 +3,6 @@ export solve
 
 
 
-function solve(::Type{Backend},PDE::SchrodingerPDE,Grid::SpaceTimeGrid) where Backend<:AbstractBackend
+function solve(::Type{Backend},PDE::SchrodingerPDE,Grid::SpaceTimeGrid,time_order::Int,space_order::Int) where Backend<:AbstractBackend
     
 end

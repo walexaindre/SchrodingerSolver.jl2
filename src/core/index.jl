@@ -2,7 +2,7 @@
 include("AbstractMesh/AbstractMesh.jl")
 include("SpaceTimeGrid/SpaceTimeGrid.jl")
 include("SchrodingerPDE/SchrodingerPDE.jl")
-
+include("SpaceDiscretization/SpaceDiscretization.jl")
 
 
 

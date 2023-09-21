@@ -82,6 +82,30 @@ end
     metadata.MN * metadata.L
 end
 
+@inline function get_stencil(index::Int,depth::Int,metadata::Mesh1D)
+
+    out = zeros(Int64,1+depth*2)
+
+    out[1] = index
+
+    for dist in 1:depth
+        out[(2*(dist-1)+2):(2*(dist)+1)] = step_x(index,depth,metadata)
+    end
+    out    
+end
+
+@inline function get_stencil(index::Int,depth::Int,metadata::Mesh2D)
+
+    out = zeros(Int64,1+depth*2)
+
+    out[1] = index
+
+    for dist in 1:depth
+        out[(2*(dist-1)+2):(2*(dist)+1)] = step_x(index,depth,metadata)
+    end
+    out    
+end
+
 #Base methods
 @inline Base.length(AbstractMesh::MetaMesh1D) = AbstractMesh.M
 @inline Base.length(AbstractMesh::MetaMesh2D) = AbstractMesh.MN
