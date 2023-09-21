@@ -3,7 +3,7 @@ export MetaMesh,MetaMesh1D,MetaMesh2D,MetaMesh3D
 abstract type MetaMesh end
 
 struct MetaMesh1D <: MetaMesh
-    N::Int #points
+    M::Int #points
 end
 
 struct MetaMesh2D <: MetaMesh
