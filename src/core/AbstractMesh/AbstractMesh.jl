@@ -82,29 +82,122 @@ end
     metadata.MN * metadata.L
 end
 
-@inline function get_stencil(index::Int,depth::Int,metadata::Mesh1D)
+
+@inline function get_stencil(index::Int,start_depth::Int,end_depth::Int,metadata::MetaMesh1D)
+    depth =  end_depth-start_depth+1
 
     out = zeros(Int64,1+depth*2)
 
     out[1] = index
 
-    for dist in 1:depth
-        out[(2*(dist-1)+2):(2*(dist)+1)] = step_x(index,depth,metadata)
+    for dist in start_depth:end_depth
+        out[(2*(dist-1)+2):(2*(dist)+1)] = [step_x(index,dist,metadata)...]
     end
     out    
 end
 
-@inline function get_stencil(index::Int,depth::Int,metadata::Mesh2D)
+@inline function get_stencil(index::Int,start_depth::Int,end_depth::Int,metadata::MetaMesh2D)
+    depth =  end_depth-start_depth+1
+
+    out = zeros(Int64,1+depth*4)
+
+    out[1] = index
+
+    for dist in start_depth:end_depth
+        out[(4*(dist-1)+2):(4*(dist)+1)] = [step_x(index,dist,metadata)...,step_y(index,dist,metadata)...]
+    end
+    out    
+end
+
+@inline function get_stencil(index::Int,start_depth::Int,end_depth::Int,metadata::MetaMesh3D)
+    depth =  end_depth-start_depth+1
+
+    out = zeros(Int64,1+depth*6)
+
+    out[1] = index
+
+    for dist in start_depth:end_depth
+        out[(6*(dist-1)+2):(6*(dist)+1)] = [step_x(index,dist,metadata)...,step_y(index,dist,metadata)...,step_z(index,dist,metadata)...]
+    end
+    out    
+end
+
+
+@inline function get_linear_stencil(index::Int,start_depth::Int,end_depth::Int,metadata::MetaMesh1D)
+    depth =  end_depth-start_depth+1
 
     out = zeros(Int64,1+depth*2)
 
     out[1] = index
 
+    x = linear_indexing(index,metadata)
     for dist in 1:depth
-        out[(2*(dist-1)+2):(2*(dist)+1)] = step_x(index,depth,metadata)
+
+        lx,rx =step_x(x,start_depth+dist-1,metadata)
+        olx = linear_indexing(lx,metadata)
+        orx = linear_indexing(rx,metadata)
+
+        out[(2*dist):(2*(dist)+1)] = [olx,orx]
     end
     out    
 end
+
+@inline function get_linear_stencil(index::Int,start_depth::Int,end_depth::Int,metadata::MetaMesh2D)
+    depth =  end_depth-start_depth+1
+
+    out = zeros(Int64,1+depth*4)
+
+    out[1] = index
+    
+    x,y = linear_indexing(index,metadata)
+
+    for dist in 1:depth
+        step_mov = start_depth+dist-1
+
+        lx,rx =step_x(x,step_mov,metadata)
+        olx = linear_indexing(lx,y,metadata)
+        orx = linear_indexing(rx,y,metadata)
+
+        ly,ry =step_y(y,step_mov,metadata)
+        oly = linear_indexing(x,ly,metadata)
+        ory = linear_indexing(x,ry,metadata)
+
+        out[(4*dist-2):(4*dist+1)] = [olx,orx,oly,ory]
+    end
+    out  
+end
+
+@inline function get_linear_stencil(index::Int,start_depth::Int,end_depth::Int,metadata::MetaMesh3D)
+    depth =  end_depth-start_depth+1
+    outdim = 1+depth*6
+    #@show outdim,depth,end_depth,start_depth
+    out = zeros(Int64,outdim)
+
+    out[1] = index
+
+    x,y,z = linear_indexing(index,metadata)
+
+    for dist in 1:depth
+        step_mov = start_depth+dist-1
+
+        lx,rx =step_x(x,step_mov,metadata)
+        olx = linear_indexing(lx,y,z,metadata)
+        orx = linear_indexing(rx,y,z,metadata)
+
+        ly,ry =step_y(y,step_mov,metadata)
+        oly = linear_indexing(x,ly,z,metadata)
+        ory = linear_indexing(x,ry,z,metadata)
+
+        lz,rz =step_z(z,step_mov,metadata)
+        olz = linear_indexing(x,y,lz,metadata)
+        orz = linear_indexing(x,y,rz,metadata)
+
+
+        out[(6*dist-4):(6*dist+1)] = [olx,orx,oly,ory,olz,orz]
+    end
+    out 
+end
+
 
 #Base methods
 @inline Base.length(AbstractMesh::MetaMesh1D) = AbstractMesh.M

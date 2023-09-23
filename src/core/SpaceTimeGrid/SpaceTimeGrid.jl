@@ -1,6 +1,7 @@
 include("SpaceTimeGridTypes.jl")
 
 export get_metadata, get_τ, get_measure, get_element, get_diameter
+export get_indexed_elements, evaluate_indexed_elements
 
 function get_τ(Grid::SpaceTimeGrid)
     Grid.τ
@@ -44,6 +45,60 @@ end
 
 function get_metadata(Grid::SpaceTimeGrid)
     Grid.metadata
+end
+
+function get_space_steps(Grid::SpaceTimeGrid1D)
+    Grid.hx
+end
+
+function get_space_steps(Grid::SpaceTimeGrid2D)
+    Grid.hx,Grid.hy
+end
+
+function get_space_steps(Grid::SpaceTimeGrid3D)
+    Grid.hx,Grid.hy,Grid.hz
+end
+
+###
+
+function linear_indexing(Grid::SpaceTimeGrid)
+    meta = get_metadata(Grid)
+    max_size = linear_size(meta)
+
+    linear_index_wrap(index) = linear_indexing(index, meta)
+
+    indexes = collect(1:max_size)
+
+    linear_index_wrap.(indexes)
+
+end
+
+function get_indexed_elements(Grid::SpaceTimeGrid)
+    function get_element_wrap(index)
+        get_element(Grid, index...)
+    end
+    indexing = linear_indexing(Grid)
+    get_element_wrap.(indexing)
+end
+
+function evaluate_indexed_elements(Grid::SpaceTimeGrid, fun::Function)
+    indexed_collection = get_indexed_elements(Grid)
+
+    function evaluate_wrap(tuple)
+        fun(tuple...)
+    end
+
+    evaluate_wrap.(indexed_collection)
+end
+
+function evaluate_indexed_elements(Grid::SpaceTimeGrid, fun::Function,add_argument...)
+    indexed_collection = get_indexed_elements(Grid)
+
+    function evaluate_wrap(tuple)
+        fun(tuple...,add_argument...)
+    end
+
+    evaluate_wrap.(indexed_collection)
 end
 
 #Base functionality

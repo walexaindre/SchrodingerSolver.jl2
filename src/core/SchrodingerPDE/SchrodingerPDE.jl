@@ -6,7 +6,7 @@ include("SchrodingerPDETypes.jl")
 end
 
 @inline function get_total_components(PDE_Meta::SchrodingerPDE)
-    size(PDE_Meta.σ, 1)
+    size(PDE_Meta.ψ₀, 1)
 end
 
 @inline function eval_component(PDE_Meta::SchrodingerPDENonPolynomic, index::Int, arguments...)
@@ -36,3 +36,10 @@ end
 @inline function get_end_time(PDE_Meta::SchrodingerPDE)
     PDE_Meta.T
 end
+
+#Base methods
+
+@inline function Base.ndims(PDE::SchrodingerPDE)
+    size(PDE.boundaries,2)
+end
+

@@ -1,5 +1,11 @@
+include("SolverTypes.jl")
 include("Backends/Backends.jl")
 export solve
+
+function get_time_steps(PDE::SchrodingerPDE, Grid::SpaceTimeGrid)
+    PDE.T / Grid.τ
+end
+
 
 
 
