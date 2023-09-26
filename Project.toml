@@ -11,9 +11,13 @@ Krylov = "ba0b0d4f-ebba-5204-a429-3ac8c609bfb7"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LinearOperators = "5c8ed15e-5a4c-59e4-a42b-c7e8811fb125"
 LinearSolve = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
+MKLSparse = "0c723cd3-b8cd-5d40-b370-ba682dde9aae"
+MKL_jll = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
+Polyester = "f517fe37-dbe3-4b94-8317-1923a5111588"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+SparseMatricesCSR = "a0a7dd2c-ebf4-11e9-1f05-cf50bc540ca1"
 
 [compat]
 julia = "1.9"

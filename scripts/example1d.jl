@@ -25,7 +25,7 @@ T = 40.0
 
 c = (1+2*α)|>Float64
 
-hx=0.02
+hx=0.005
 hy=0.5
 τ = 0.005
 
@@ -69,4 +69,10 @@ Solver = InitializePDESolver(CPUBackend,get_metadata(grid1d),[Ker;Ker],A)
 
 start = startup_CPU(PDE,grid1d)
 
+a=1;
+#@show cond(B,1)
+
+#@show cond(A,1)
+
+#@show cond(C,1)
 full_algorithm(Solver,PDE,grid1d,start)

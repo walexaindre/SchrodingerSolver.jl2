@@ -3,20 +3,24 @@ include("SpaceTimeGridTypes.jl")
 export get_metadata, get_τ, get_measure, get_element, get_diameter
 export get_indexed_elements, evaluate_indexed_elements
 
-function get_τ(Grid::SpaceTimeGrid)
+@inline function get_τ(Grid::SpaceTimeGrid)
     Grid.τ
 end
 
-function get_measure(Grid::SpaceTimeGrid1D)
+@inline function get_measure(Grid::SpaceTimeGrid1D)
     Grid.hx
 end
 
-function get_measure(Grid::SpaceTimeGrid2D)
+@inline function get_measure(Grid::SpaceTimeGrid2D)
     Grid.hx * Grid.hy
 end
 
-function get_measure(Grid::SpaceTimeGrid3D)
+@inline function get_measure(Grid::SpaceTimeGrid3D)
     Grid.hx * Grid.hy * Grid.hz
+end
+
+@inline function get_square_root_measure(Grid::SpaceTimeGrid)
+    sqrt(get_measure(Grid))    
 end
 
 function get_element(Grid::SpaceTimeGrid1D, index::Int)

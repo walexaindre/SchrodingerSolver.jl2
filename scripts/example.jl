@@ -1,4 +1,6 @@
 using SchrodingerSolver
+using MKLSparse
+
 
 function ψ01(x,y)
     k1 = 1.0+1.0im
@@ -32,6 +34,8 @@ T = 40.0
 
 hx=8.0/100
 hy=8.0/100
+
+
 
 τ = 0.005
 function Nop(prevMove,currMove,index::Int)
@@ -75,3 +79,4 @@ Solver = InitializePDESolver(CPUBackend,get_metadata(grid2d),[Ker;Ker],A)
 start = startup_CPU(PDE,grid2d)
 
 full_algorithm(Solver,PDE,grid2d,start)
+

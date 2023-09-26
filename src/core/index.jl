@@ -1,3 +1,7 @@
+#Threaded CSR
+include("ThreadedSparseCSR/ThreadedSparseCSR.jl")
+using .ThreadedSparseCSR
+
 #Abstract
 include("ComputeBackend/ComputeBackend.jl")
 include("AbstractMesh/AbstractMesh.jl")
