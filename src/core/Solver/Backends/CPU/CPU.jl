@@ -1,5 +1,5 @@
 export generate_grid, generate_ABC, assembly_metakernel, InitializePDESolver, startup_CPU,
-    full_algorithm, update_component!,get_preconditioner_B
+    full_algorithm, update_component!, get_preconditioner_B
 
 function generate_grid(PDE::SchrodingerPDE, τ::T, hx::T) where {T <: AbstractFloat}
     function get_space(min_space, max_space, dist)
@@ -185,7 +185,7 @@ function update_component!(PDEsln::PDESolver,
         preB.b = b0 .-
                  τ .* opA *
                  (calculate_N(PDE, currentMove, nextMove, index) .* (zl .+ prev_zl))
-        
+
         sol = LinearSolve.solve!(preB)
         zl .= sol.u
 
@@ -351,4 +351,71 @@ function full_algorithm(Solver::PDESolver, PDE::SchrodingerPDE, Grid::SpaceTimeG
     end
 
     return nextMove
+end
+
+function check_consistency()
+end
+
+function calculate_dim_h(a::T, b::T, N::Int) where {T <: AbstractFloat}
+    (b - a) / (N - 1)
+end
+
+function parse_input_dim_args(expected_dims::Int; kwargs...)
+    h = zeros(T, expected_dims)
+    N = zeros(Int64, expected_dims)
+    dim_ranges = Array{StepRange{Int64, Int64}}(undef, expected_dims)
+
+    for (dim, keyh, keyN) in zip([1, 2, 3], [:hx, :hy, :hz], [:Nx, :Ny, :Nz])
+        if expected_dims >= dim
+            lb, rb = get_boundary(PDE, dim)
+            if haskey(kwargs, keyh)
+                hval = kwargs[keyh]
+
+                drange = lb:hval:rb
+                nval = size(drange, 1)
+
+                if hval <= 0
+                    throw(DomainError(hval,
+                        "Solver only works with non zero and positive step $(keyh) in dimension index $(dim)..."))
+                end
+            elseif haskey(kwargs, keyN)
+                nval = kwargs[keyN]
+                hval = calculate_dim_h(lb, rb, nval)
+
+                if nval <= 0
+                    throw(DomainError(nval,
+                        "Solver only works with non zero and positive divisions $(keyN) in dimension with index $(dim)..."))
+                end
+            else
+                throw(ArgumentError("Expected $(keyh) or $(keyN). You must define one of them..."))
+            end
+
+            N[dim] = nval
+            h[dim] = hval
+            dim_ranges[dim] = lb:hval:rb
+        else
+            break
+        end
+    end
+
+    h, N, dim_ranges
+end
+
+function solve(::Type{T},
+    Backend::CPUBackend,
+    PDE::SchrodingerPDE;
+    fixed_steps::Int = 0,
+    r_tol::T = 700 * eps(T),
+    a_tol::T = 700 * eps(T),
+    showprogress::Bool = true,
+    verbose::Int = 0,
+    kwargs...) where {T <: AbstractFloat}
+    expected_dims = ndims(PDE)
+
+    h, N, dim_ranges = parse_input_dim_args(expected_dims, kwargs...)
+
+    Grid =     
+    
+
+    cpu_store = check_consistency()
 end

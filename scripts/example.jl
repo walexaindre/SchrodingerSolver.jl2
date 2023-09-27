@@ -79,4 +79,3 @@ Solver = InitializePDESolver(CPUBackend,get_metadata(grid2d),[Ker;Ker],A)
 start = startup_CPU(PDE,grid2d)
 
 full_algorithm(Solver,PDE,grid2d,start)
-

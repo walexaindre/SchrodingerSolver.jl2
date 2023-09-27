@@ -3,6 +3,80 @@ include("SpaceTimeGridTypes.jl")
 export get_metadata, get_τ, get_measure, get_element, get_diameter
 export get_indexed_elements, evaluate_indexed_elements
 
+@inline function check_size(range::StepRange{T, T}, h::T, N::Int) where {T <: AbstractFloat}
+    if !(size(range, 1) == N)
+    elseif !isapprox(range.step, h)
+        throw(ArgumentError("Range step and h are very different... (Possibly miscalculated in SpaceTimeGrid construction) h: $(h), step: $(range.step)"))
+    end
+end
+
+@inline function SpaceTimeGrid1D(xrange::StepRange{T, T},
+    τ::T,
+    hx::T,
+    Nx::Int) where {T <: AbstractFloat}
+    #checking step
+    check_size(xrange, hx, Nx)
+    SpaceTimeGrid1D(xrange, MetaMesh1D(Nx), τ, hx)
+end
+
+@inline function SpaceTimeGrid2D(xrange::StepRange{T, T},
+    yrange::StepRange{T, T},
+    τ::T,
+    hx::T,
+    hy::T,
+    Nx::Int,
+    Ny::Int) where {T <: AbstractFloat}
+    #checking step
+    check_size(xrange, hx, Nx)
+    check_size(yrange, hy, Ny)
+    SpaceTimeGrid2D(xrange, yrange, MetaMesh2D(Nx, Ny), τ, hx, hy)
+end
+
+@inline function SpaceTimeGrid3D(xrange::StepRange{T, T},
+    yrange::StepRange{T, T},
+    zrange::StepRange{T, T},
+    τ::T,
+    hx::T,
+    hy::T,
+    hz::T,
+    Nx::Int,
+    Ny::Int,
+    Nz::Int) where {T <: AbstractFloat}
+    #checking step
+    check_size(xrange, hx, Nx)
+    check_size(yrange, hy, Ny)
+    check_size(zrange, hz, Nz)
+    SpaceTimeGrid3D(xrange, yrange, zrange, MetaMesh3D(Nx, Ny, Nz), τ, hx, hy, hz)
+end
+
+@inline function CreateGrid(xrange::StepRange{T, T},
+    τ::T,
+    hx::T,
+    Nx::Int) where {T <: AbstractFloat}
+    SpaceTimeGrid1D(xrange, τ, hx, Nx)
+end
+@inline function CreateGrid(xrange::StepRange{T, T},
+    yrange::StepRange{T, T},
+    τ::T,
+    hx::T,
+    hy::T,
+    Nx::Int,
+    Ny::Int) where {T <: AbstractFloat}
+    SpaceTimeGrid2D(xrange, yrange, τ, hx, hy, Nx, Ny)
+end
+@inline function CreateGrid(xrange::StepRange{T, T},
+    yrange::StepRange{T, T},
+    zrange::StepRange{T, T},
+    τ::T,
+    hx::T,
+    hy::T,
+    hz::T,
+    Nx::Int,
+    Ny::Int,
+    Nz::Int) where {T <: AbstractFloat}
+    SpaceTimeGrid3D(xrange, yrange, zrange, τ, hx, hy, hz, Nx, Ny, Nz)
+end
+
 @inline function get_τ(Grid::SpaceTimeGrid)
     Grid.τ
 end
@@ -20,52 +94,55 @@ end
 end
 
 @inline function get_square_root_measure(Grid::SpaceTimeGrid)
-    sqrt(get_measure(Grid))    
+    sqrt(get_measure(Grid))
 end
 
-function get_element(Grid::SpaceTimeGrid1D, index::Int)
+@inline function get_element(Grid::SpaceTimeGrid1D, index::Int)
     Grid.Ωx[index]
 end
 
-function get_element(Grid::SpaceTimeGrid2D, index_x::Int, index_y::Int)
+@inline function get_element(Grid::SpaceTimeGrid2D, index_x::Int, index_y::Int)
     Grid.Ωx[index_x], Grid.Ωy[index_y]
 end
 
-function get_element(Grid::SpaceTimeGrid3D, index_x::Int, index_y::Int, index_z::Int)
+@inline function get_element(Grid::SpaceTimeGrid3D,
+    index_x::Int,
+    index_y::Int,
+    index_z::Int)
     Grid.Ωx[index_x], Grid.Ωy[index_y], Grid.Ωy[index_z]
 end
 
-function get_diameter(Grid::SpaceTimeGrid1D)
+@inline function get_diameter(Grid::SpaceTimeGrid1D)
     return Grid.hx
 end
 
-function get_diameter(Grid::SpaceTimeGrid2D)
+@inline function get_diameter(Grid::SpaceTimeGrid2D)
     return sqrt(Grid.hx^2 + Grid.hy^2)
 end
 
-function get_diameter(Grid::SpaceTimeGrid3D)
+@inline function get_diameter(Grid::SpaceTimeGrid3D)
     return sqrt(Grid.hx^2 + Grid.hy^2 + Grid.hz^2)
 end
 
-function get_metadata(Grid::SpaceTimeGrid)
+@inline function get_metadata(Grid::SpaceTimeGrid)
     Grid.metadata
 end
 
-function get_space_steps(Grid::SpaceTimeGrid1D)
+@inline function get_space_steps(Grid::SpaceTimeGrid1D)
     Grid.hx
 end
 
-function get_space_steps(Grid::SpaceTimeGrid2D)
-    Grid.hx,Grid.hy
+@inline function get_space_steps(Grid::SpaceTimeGrid2D)
+    Grid.hx, Grid.hy
 end
 
-function get_space_steps(Grid::SpaceTimeGrid3D)
-    Grid.hx,Grid.hy,Grid.hz
+@inline function get_space_steps(Grid::SpaceTimeGrid3D)
+    Grid.hx, Grid.hy, Grid.hz
 end
 
 ###
 
-function linear_indexing(Grid::SpaceTimeGrid)
+@inline function linear_indexing(Grid::SpaceTimeGrid)
     meta = get_metadata(Grid)
     max_size = linear_size(meta)
 
@@ -74,32 +151,33 @@ function linear_indexing(Grid::SpaceTimeGrid)
     indexes = collect(1:max_size)
 
     linear_index_wrap.(indexes)
-
 end
 
-function get_indexed_elements(Grid::SpaceTimeGrid)
-    function get_element_wrap(index)
+@inline function get_indexed_elements(Grid::SpaceTimeGrid)
+    @inline function get_element_wrap(index)
         get_element(Grid, index...)
     end
     indexing = linear_indexing(Grid)
     get_element_wrap.(indexing)
 end
 
-function evaluate_indexed_elements(Grid::SpaceTimeGrid, fun::Function)
+@inline function evaluate_indexed_elements(Grid::SpaceTimeGrid, fun::Function)
     indexed_collection = get_indexed_elements(Grid)
 
-    function evaluate_wrap(tuple)
+    @inline function evaluate_wrap(tuple)
         fun(tuple...)
     end
 
     evaluate_wrap.(indexed_collection)
 end
 
-function evaluate_indexed_elements(Grid::SpaceTimeGrid, fun::Function,add_argument...)
+@inline function evaluate_indexed_elements(Grid::SpaceTimeGrid,
+    fun::Function,
+    add_argument...)
     indexed_collection = get_indexed_elements(Grid)
 
-    function evaluate_wrap(tuple)
-        fun(tuple...,add_argument...)
+    @inline function evaluate_wrap(tuple)
+        fun(tuple..., add_argument...)
     end
 
     evaluate_wrap.(indexed_collection)

@@ -10,6 +10,7 @@ using SparseArrays
 using GLMakie
 using Krylov
 using Base.Threads 
+using Base.Iterators
 using ProgressMeter
 using SparseMatricesCSR
 include("./core/index.jl")

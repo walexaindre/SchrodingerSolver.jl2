@@ -2,7 +2,7 @@ export SpaceTimeGrid,SpaceTimeGrid1D,SpaceTimeGrid2D,SpaceTimeGrid3D
 abstract type SpaceTimeGrid end
 
 struct SpaceTimeGrid1D{DataType<:AbstractFloat} <: SpaceTimeGrid
-    Ωx::AbstractArray{DataType,1}
+    Ωx::StepRange{DataType,DataType}
 
     metadata::MetaMesh1D
 
@@ -13,8 +13,8 @@ end
 
 struct SpaceTimeGrid2D{DataType<:AbstractFloat} <: SpaceTimeGrid
 
-    Ωx::AbstractArray{DataType,1}
-    Ωy::AbstractArray{DataType,1}
+    Ωx::StepRange{DataType,DataType}
+    Ωy::StepRange{DataType,DataType}
 
     metadata::MetaMesh2D
 
@@ -26,9 +26,9 @@ end
 
 struct SpaceTimeGrid3D{DataType<:AbstractFloat} <: SpaceTimeGrid
 
-    Ωx::AbstractArray{DataType,1}
-    Ωy::AbstractArray{DataType,1}
-    Ωz::AbstractArray{DataType,1}
+    Ωx::StepRange{DataType,DataType}
+    Ωy::StepRange{DataType,DataType}
+    Ωz::StepRange{DataType,DataType}
 
     metadata::MetaMesh3D
 
