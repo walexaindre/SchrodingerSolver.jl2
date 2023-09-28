@@ -48,9 +48,9 @@ function get_space_discretization_coefficients(::Type{T},
     SecondDerivativeCoefficients{T}(T(a), T(b), T(c), T(α), T(β))
 end
 
-function get_sparsematrix_A(::Type{T},
+function get_A_format_IJV(::Type{T},
     Mesh::MetaMesh,
-    order::Int) where {T <: AbstractFloat}
+    order::Int)  where {T <: AbstractFloat}
     space_discretization = get_space_discretization_coefficients(T, order)
 
     α = space_discretization.α
@@ -97,11 +97,23 @@ function get_sparsematrix_A(::Type{T},
 
         #V[(count * (idx - 1) + 1):(count * idx)] .= value
     end
-
-    sparse(I, J, V)
+    I,J,V
 end
 
-function Δ(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
+@inline function get_sparsematrix_A(::Type{T},
+    Mesh::MetaMesh,
+    order::Int) where {T <: AbstractFloat}
+
+    sparse(get_A_format_IJV(T,Mesh,order)...)
+end
+
+@inline function get_A_csr(::Type{T},
+    Mesh::MetaMesh,
+    order::Int) where {T <: AbstractFloat}
+    sparsecsr(get_A_format_IJV(T,Mesh,order)...)
+end
+
+function Δ_format_IJV(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
     if !(0 <= n <= 2)
         throw(BoundsError([0, 1, 2], n))
     end
@@ -132,8 +144,15 @@ function Δ(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
         I[section] .= idx
         J[section] .= get_linear_stencil(idx, n + 1, n + 1, mesh)
     end
+    I,J,V
+end
 
-    sparse(I, J, V)
+function Δ(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
+    sparse(Δ_format_IJV(n,coefficient,h,lsize)...)
+end
+
+function Δ_csr(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
+    sparsecsr(Δ_format_IJV(n,coefficient,h,lsize)...)
 end
 
 function get_sparsematrix_D(Grid::SpaceTimeGrid1D, order::Int)

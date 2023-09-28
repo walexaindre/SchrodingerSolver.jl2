@@ -25,16 +25,20 @@ end
     PDE_Meta.F(arguments...)
 end
 
+@inline function get_σ(PDE_Meta::SchrodingerPDE)
+    PDE_Meta.σ
+end
+
 @inline function get_σ(PDE_Meta::SchrodingerPDE, index::Int)
-    PDE_Meta.σ[:,index]
+    PDE_Meta.σ[index]
 end
 
 @inline function get_boundary(PDE_Meta::SchrodingerPDE, index::Int)
     PDE_Meta.boundaries[:, index]
 end
 
-@inline function get_end_time(PDE_Meta::SchrodingerPDE)
-    PDE_Meta.T
+@inline function get_end_time(PDE::SchrodingerPDE)
+    PDE.T
 end
 
 #Base methods

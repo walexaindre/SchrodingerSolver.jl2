@@ -23,7 +23,7 @@ end
 
 boundaries = [-20.0 -20.0; 20.0 20.0]
 
-σ = [1.0 1.0]
+σ = [1.0,1.0]
 
 
 Start = [ψ01, ψ01]
@@ -68,14 +68,17 @@ end
 
 PDE = SchrodingerPDEPolynomic(boundaries, σ, Nop, Start, T, FieldF)
 
-grid2d = generate_grid(PDE,τ,hx,hy)
+#grid2d = generate_grid(PDE,τ,hx,hy)
 
-A,B,C = generate_ABC(grid2d,6,1.0)
+#A,B,C = generate_ABC(grid2d,6,1.0)
 
-Ker = assembly_metakernel(CPUBackend,get_metadata(grid2d),B,C)
+#Ker = assembly_metakernel(CPUBackend,get_metadata(grid2d),B,C)
 
-Solver = InitializePDESolver(CPUBackend,get_metadata(grid2d),[Ker;Ker],A)
+#Solver = InitializePDESolver(CPUBackend,get_metadata(grid2d),[Ker;Ker],A)
 
-start = startup_CPU(PDE,grid2d)
+#start = startup_CPU(PDE,grid2d)
 
-full_algorithm(Solver,PDE,grid2d,start)
+#full_algorithm(Solver,PDE,grid2d,start)
+
+
+solve(Float64,CPUBackend,PDE,2,τ=0.5,hx=0.4,hy=0.2)

@@ -3,14 +3,14 @@ include("SpaceTimeGridTypes.jl")
 export get_metadata, get_τ, get_measure, get_element, get_diameter
 export get_indexed_elements, evaluate_indexed_elements
 
-@inline function check_size(range::StepRange{T, T}, h::T, N::Int) where {T <: AbstractFloat}
+@inline function check_size(range::AbstractRange{T}, h::T, N::Int) where {T <: AbstractFloat}
     if !(size(range, 1) == N)
-    elseif !isapprox(range.step, h)
+    elseif !isapprox(range.step|>T, h)
         throw(ArgumentError("Range step and h are very different... (Possibly miscalculated in SpaceTimeGrid construction) h: $(h), step: $(range.step)"))
     end
 end
 
-@inline function SpaceTimeGrid1D(xrange::StepRange{T, T},
+@inline function SpaceTimeGrid1D(xrange::AbstractRange{T},
     τ::T,
     hx::T,
     Nx::Int) where {T <: AbstractFloat}
@@ -19,8 +19,8 @@ end
     SpaceTimeGrid1D(xrange, MetaMesh1D(Nx), τ, hx)
 end
 
-@inline function SpaceTimeGrid2D(xrange::StepRange{T, T},
-    yrange::StepRange{T, T},
+@inline function SpaceTimeGrid2D(xrange::AbstractRange{T},
+    yrange::AbstractRange{T},
     τ::T,
     hx::T,
     hy::T,
@@ -32,9 +32,9 @@ end
     SpaceTimeGrid2D(xrange, yrange, MetaMesh2D(Nx, Ny), τ, hx, hy)
 end
 
-@inline function SpaceTimeGrid3D(xrange::StepRange{T, T},
-    yrange::StepRange{T, T},
-    zrange::StepRange{T, T},
+@inline function SpaceTimeGrid3D(xrange::AbstractRange{T},
+    yrange::AbstractRange{T},
+    zrange::AbstractRange{T},
     τ::T,
     hx::T,
     hy::T,
@@ -49,14 +49,14 @@ end
     SpaceTimeGrid3D(xrange, yrange, zrange, MetaMesh3D(Nx, Ny, Nz), τ, hx, hy, hz)
 end
 
-@inline function CreateGrid(xrange::StepRange{T, T},
+@inline function CreateGrid(xrange::AbstractRange{T},
     τ::T,
     hx::T,
     Nx::Int) where {T <: AbstractFloat}
     SpaceTimeGrid1D(xrange, τ, hx, Nx)
 end
-@inline function CreateGrid(xrange::StepRange{T, T},
-    yrange::StepRange{T, T},
+@inline function CreateGrid(xrange::AbstractRange{T},
+    yrange::AbstractRange{T},
     τ::T,
     hx::T,
     hy::T,
@@ -64,9 +64,9 @@ end
     Ny::Int) where {T <: AbstractFloat}
     SpaceTimeGrid2D(xrange, yrange, τ, hx, hy, Nx, Ny)
 end
-@inline function CreateGrid(xrange::StepRange{T, T},
-    yrange::StepRange{T, T},
-    zrange::StepRange{T, T},
+@inline function CreateGrid(xrange::AbstractRange{T},
+    yrange::AbstractRange{T},
+    zrange::AbstractRange{T},
     τ::T,
     hx::T,
     hy::T,

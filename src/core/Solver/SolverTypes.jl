@@ -13,6 +13,17 @@ struct MetaKernel{T<:OperatorOrMatrix}
     preconditionerB
 end
 
+struct MetaKer2{T<:OperatorOrMatrix}
+    C::T
+    factorizationB
+end
+
+struct PDESolver2{T<:AbstractFloat,Backend<:AbstractBackend,MetaGrid<:MetaMesh,Operator<:OperatorOrMatrix}
+    Grid::MetaGrid
+    Kernel::Dictionary{Tuple{T,T},MetaKer2}
+    opA::Operator
+end
+
 struct PDESolver{Backend<:AbstractBackend,MetaGrid<:MetaMesh,Operator<:OperatorOrMatrix}
     Grid::MetaGrid
     Kernel::Array{MetaKernel}
@@ -23,3 +34,7 @@ struct PDESolution
     time_steps::Int #Number of time_steps
 
 end
+
+##Approach for access
+
+#Attempt to implement (σ_i,τ_j) -> B,C

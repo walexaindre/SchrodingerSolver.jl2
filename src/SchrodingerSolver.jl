@@ -13,6 +13,7 @@ using Base.Threads
 using Base.Iterators
 using ProgressMeter
 using SparseMatricesCSR
+using Dictionaries
 include("./core/index.jl")
 
 end

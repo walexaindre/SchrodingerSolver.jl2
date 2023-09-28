@@ -1,5 +1,5 @@
 export generate_grid, generate_ABC, assembly_metakernel, InitializePDESolver, startup_CPU,
-    full_algorithm, update_component!, get_preconditioner_B
+    full_algorithm, update_component!, get_preconditioner_B, solve
 
 function generate_grid(PDE::SchrodingerPDE, τ::T, hx::T) where {T <: AbstractFloat}
     function get_space(min_space, max_space, dist)
@@ -30,8 +30,8 @@ function generate_grid(PDE::SchrodingerPDE, τ::T, hx::T, hy::T) where {T <: Abs
         lx, rx = get_boundary(PDE, 1)
         ly, ry = get_boundary(PDE, 2)
 
-        spacex = get_space(lx, rx - hx, hx)
-        spacey = get_space(ly, ry - hy, hy)
+        spacex = lx:hx:rx
+        spacey = ly:hy:ry
 
         mesh = MetaMesh2D(size(spacex, 1), size(spacey, 1))
     else
@@ -360,10 +360,32 @@ function calculate_dim_h(a::T, b::T, N::Int) where {T <: AbstractFloat}
     (b - a) / (N - 1)
 end
 
-function parse_input_dim_args(expected_dims::Int; kwargs...)
+function parse_input_dim_args(::Type{T},
+    expected_dims::Int, PDE::SchrodingerPDE;
+    kwargs...) where {T <: AbstractFloat}
     h = zeros(T, expected_dims)
     N = zeros(Int64, expected_dims)
-    dim_ranges = Array{StepRange{Int64, Int64}}(undef, expected_dims)
+    dim_ranges = Array{AbstractRange{T}}(undef, expected_dims)
+    time_end = get_end_time(PDE)
+
+    if haskey(kwargs, :τ)
+        τ = kwargs[:τ]
+        if τ <= 0 || !isa(τ, T)
+            throw(DomainError(τ,
+                "τ is expected to be a non zero and positive float value with type $(typeof(T))..."))
+        end
+        time_steps = ceil(Int64, time_end / τ)
+    elseif haskey(kwargs, :time_steps)
+        time_steps = kwargs[:time_steps]
+        if time_steps <= 0 || !isa(time_steps, Int)
+            throw(DomainError(time_steps,
+                "time_steps is expected to be a non zero and positive integer..."))
+        end
+        τ = convert(T, time_end / time_steps)
+
+    else
+        throw(ArgumentError("You must provide total count of timesteps (time_steps::Int) or time step (τ::$(typeof(T)))..."))
+    end
 
     for (dim, keyh, keyN) in zip([1, 2, 3], [:hx, :hy, :hz], [:Nx, :Ny, :Nz])
         if expected_dims >= dim
@@ -398,24 +420,128 @@ function parse_input_dim_args(expected_dims::Int; kwargs...)
         end
     end
 
-    h, N, dim_ranges
+    h, N, dim_ranges, τ, time_steps
 end
 
 function solve(::Type{T},
-    Backend::CPUBackend,
-    PDE::SchrodingerPDE;
-    fixed_steps::Int = 0,
+    ::Type{CPUBackend},
+    PDE::SchrodingerPDE,
+    space_order::Int = 2,
+    time_order::Int = 2;
+    time_composition_substeps::Int = 1,
+    time_composition_index::Int = 1,
+    fixed_innerloop_steps::Int = 0,
     r_tol::T = 700 * eps(T),
     a_tol::T = 700 * eps(T),
     showprogress::Bool = true,
     verbose::Int = 0,
     kwargs...) where {T <: AbstractFloat}
+
+    #Dimensionality
     expected_dims = ndims(PDE)
 
-    h, N, dim_ranges = parse_input_dim_args(expected_dims, kwargs...)
+    #Validations and startup calculations...
+    h, N, dim_ranges, τ, time_steps = parse_input_dim_args(T,
+        expected_dims,
+        PDE;
+        kwargs...)
 
-    Grid =     
-    
+    #Abstract Mesh with data...
+    Grid = CreateGrid(dim_ranges..., τ, h..., N...)
+    Mesh = get_metadata(Grid)
 
-    cpu_store = check_consistency()
+    #Initialization of Time Discretization
+
+    TimeDiscretization = get_time_discretization(T,
+        time_order,
+        time_composition_substeps,
+        time_composition_index)
+
+    #Initialization of Space Discretization
+
+    TimeMultipliers = τ * get_coefficients(TimeDiscretization)
+
+    σset = Set(get_σ(PDE))
+
+    #We need to generate B, C for all time multipliers....
+    dkeys = Array{Tuple{T, T}}(undef, length(σset) * length(TimeMultipliers))
+    dvalues = Array{MetaKer2}(undef, length(σset) * length(TimeMultipliers))
+
+    A = get_sparsematrix_A(T, Mesh, space_order)
+    D = get_sparsematrix_D(Grid, space_order)
+
+    store_idx = 1
+    for (σ, βτ) in product(σset, TimeMultipliers)
+        B = 4im * A - βτ * σ * D
+        C = 4im * A + βτ * σ * D
+        dkeys[store_idx] = (σ, βτ)
+        dvalues[store_idx] = MetaKer2(C, lu(B))
+    end
+
+    FactorizationsComponents = Dictionary(dkeys, dvalues)
+
+    PDESolverData = PDESolver2{T, CPUBackend, typeof(Mesh), typeof(A)}(Mesh,
+        FactorizationsComponents,
+        A)
+
+    #Initialization of solver process...
+
+    state0 = startup_CPU(PDE, Grid)
+
+    sz = 1
 end
+
+function full_algorithmX(start_state,
+    Solver::PDESolver2,
+    fixed_innerloop_steps::Int,
+    r_tol::T,
+    a_tol::T, showprogress::Bool, verbose::Int) where {T <: AbstractFloat}
+
+    #Memory Allocations
+
+end
+
+#=
+
+function full_algorithm(Solver::PDESolver, PDE::SchrodingerPDE, Grid::SpaceTimeGrid, Ψⁿ)
+    time_steps = Int64(get_time_steps(PDE, Grid))
+
+    total_components = get_total_components(PDE)
+
+    #Main idea, no more allocations more than this!
+
+    currentMove = copy(Ψⁿ)
+    nextMove = copy(Ψⁿ)
+
+    #element_count = linear_size(get_metadata(grid))
+    #solver = GmresSolver(element_count,element_count,20,typeof(currentMove[:,1]))
+
+    #End of allocations..
+    @show size(currentMove)
+    @show time_steps
+    plot_inner(currentMove, Grid, 0)
+    start_energy = get_measure(Grid) * sum(abs2.(currentMove), dims = 1)
+    @showprogress "Computing" showspeed=true for time_step in 1:time_steps
+
+        #Forward
+        for component_index in 1:total_components
+            update_component!(Solver, PDE, Grid, currentMove, nextMove, component_index)
+        end
+
+        #@show "pass2"
+        #Backward
+        for reverse_c_index in total_components:-1:1
+            update_component!(Solver, PDE, Grid, currentMove, nextMove, reverse_c_index)
+        end
+
+        #display(currentMove)
+        if time_step % 100 == 0
+            plot_inner(currentMove, Grid, time_step)
+            @show get_measure(Grid) * sum(abs2.(currentMove), dims = 1) - start_energy
+            @show time_step
+        end
+    end
+
+    return nextMove
+end
+=#
