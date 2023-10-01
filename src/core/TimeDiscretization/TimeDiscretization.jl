@@ -1,7 +1,7 @@
 include("TimeDiscretizationTypes.jl")
 ####
 
-@inline get_coefficient(CompositionMethod::SymmetricTimeCompositionMethod,index::Int) = CompositionMethod.coefficients[mod(index-1,CompositionMethod.substeps)+1]
+@inline get_coefficient(CompositionMethod::SymmetricTimeCompositionMethod,index::Int) = CompositionMethod.coefficients[mod(index-1,length(CompositionMethod.coefficients))+1]
 
 @inline function check_coefficients(CompositionMethod::SymmetricTimeCompositionMethod)
     sum_coefficients = 2*sum(CompositionMethod.coefficients)-CompositionMethod.coefficients[end]
@@ -16,7 +16,7 @@ function ConstructSymmetricTimeCompositionMethod(order::Int,substeps::Int,coeffi
     R
 end
 
-@inline Base.length(CompositionMethod::SymmetricTimeCompositionMethod) = CompositionMethod.substeps*2-1
+@inline Base.length(CompositionMethod::SymmetricTimeCompositionMethod) = CompositionMethod.substeps
 @inline Base.firstindex(CompositionMethod::SymmetricTimeCompositionMethod) = 1
 @inline Base.lastindex(CompositionMethod::SymmetricTimeCompositionMethod) = length(CompositionMethod)
 
@@ -30,6 +30,8 @@ end
     end
     get_coefficient(CompositionMethod,index)
 end
+
+@inline Base.eltype(::Type{SymmetricTimeCompositionMethod{T,V}}) where {T,V} = T
 
 function time_discretization_ord_2(::Type{T},
     substeps::Int64,

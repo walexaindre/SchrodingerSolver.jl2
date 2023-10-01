@@ -50,7 +50,7 @@ end
 
 function get_A_format_IJV(::Type{T},
     Mesh::MetaMesh,
-    order::Int)  where {T <: AbstractFloat}
+    order::Int) where {T <: AbstractFloat}
     space_discretization = get_space_discretization_coefficients(T, order)
 
     α = space_discretization.α
@@ -82,7 +82,7 @@ function get_A_format_IJV(::Type{T},
 
     I = zeros(Int64, space_usage) #row idx
     J = zeros(Int64, space_usage) #column idx
-    V = repeat(value,length(Mesh))
+    V = repeat(value, length(Mesh))
 
     @threads for idx in 1:length(Mesh)
         I[(count * (idx - 1) + 1):(count * idx)] .= idx
@@ -97,20 +97,33 @@ function get_A_format_IJV(::Type{T},
 
         #V[(count * (idx - 1) + 1):(count * idx)] .= value
     end
-    I,J,V
+    I, J, V
 end
 
 @inline function get_sparsematrix_A(::Type{T},
-    Mesh::MetaMesh,
+    Mesh::MetaMesh1D,
     order::Int) where {T <: AbstractFloat}
-
-    sparse(get_A_format_IJV(T,Mesh,order)...)
+    sparse(get_A_format_IJV(T, Mesh, order)...)
 end
 
 @inline function get_A_csr(::Type{T},
-    Mesh::MetaMesh,
+    Mesh::MetaMesh1D,
     order::Int) where {T <: AbstractFloat}
-    sparsecsr(get_A_format_IJV(T,Mesh,order)...)
+    sparsecsr(get_A_format_IJV(T, Mesh, order)...)
+end
+
+@inline function get_sparsematrix_A(::Type{T},
+    Mesh::MetaMesh2D,
+    order::Int) where {T <: AbstractFloat}
+
+    MeshX = MetaMesh1D(Mesh.N)
+    MeshY = MetaMesh1D(Mesh.M)
+
+    Ax = get_sparsematrix_A(T, MeshX, order)
+
+    Ay = get_sparsematrix_A(T, MeshY, order)
+
+    kron(Ay, Ax)
 end
 
 function Δ_format_IJV(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
@@ -144,15 +157,15 @@ function Δ_format_IJV(n::Int, coefficient::T, h::T, lsize::Int) where {T <: Abs
         I[section] .= idx
         J[section] .= get_linear_stencil(idx, n + 1, n + 1, mesh)
     end
-    I,J,V
+    I, J, V
 end
 
 function Δ(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
-    sparse(Δ_format_IJV(n,coefficient,h,lsize)...)
+    sparse(Δ_format_IJV(n, coefficient, h, lsize)...)
 end
 
 function Δ_csr(n::Int, coefficient::T, h::T, lsize::Int) where {T <: AbstractFloat}
-    sparsecsr(Δ_format_IJV(n,coefficient,h,lsize)...)
+    sparsecsr(Δ_format_IJV(n, coefficient, h, lsize)...)
 end
 
 function get_sparsematrix_D(Grid::SpaceTimeGrid1D, order::Int)
@@ -182,7 +195,8 @@ function get_sparsematrix_D(Grid::SpaceTimeGrid2D{T}, order::Int) where {T <: Ab
     Iy = sparse(T(1.0)I, y_size, y_size)
 
     Dx = Δ(0, a, hx, x_size) + Δ(1, b, hx, x_size) + Δ(2, c, hx, x_size)
-    Dy = Δ(0, a, hx, y_size) + Δ(1, b, hx, y_size) + Δ(2, c, hy, y_size)
+    Dy = Δ(0, a, hy, y_size) + Δ(1, b, hy, y_size) + Δ(2, c, hy, y_size)
+    
     kron(Iy, Dx) + kron(Dy, Ix)
 end
 
@@ -208,5 +222,4 @@ function get_sparsematrix_D(Grid::SpaceTimeGrid3D{T}, order::Int) where {T <: Ab
 end
 
 function Δₕ(Grid::SpaceTimeGrid3D{T}, order::Int) where {T <: AbstractFloat}
-
 end

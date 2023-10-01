@@ -14,6 +14,7 @@ using Base.Iterators
 using ProgressMeter
 using SparseMatricesCSR
 using Dictionaries
+using PrettyTables
 include("./core/index.jl")
 
 end

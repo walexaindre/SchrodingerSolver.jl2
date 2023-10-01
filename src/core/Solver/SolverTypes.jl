@@ -35,6 +35,7 @@ struct PDESolution
 
 end
 
-##Approach for access
-
-#Attempt to implement (σ_i,τ_j) -> B,C
+struct PDESolverStats
+    IterInfo::Dictionary{Int64,Int64}
+    NormInfo::Array{Float64}
+end

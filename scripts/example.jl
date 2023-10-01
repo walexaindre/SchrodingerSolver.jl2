@@ -1,6 +1,6 @@
 using SchrodingerSolver
 using MKLSparse
-
+using PProf
 
 function ψ01(x,y)
     k1 = 1.0+1.0im
@@ -32,15 +32,15 @@ T = 40.0
 
 α = 1.0
 
-hx=8.0/100
-hy=8.0/100
+hx=8.0/2
+hy=8.0/2
 
 
 
 τ = 0.005
 function Nop(prevMove,currMove,index::Int)
     #0.5*sum(abs2,currMove,dims=2)+c*view(prevMove,:,3-index)    
-    0.5*(abs2.(view(currMove,:,index))+abs2.(view(prevMove,:,index)))+α*abs2.(view(prevMove,:,3-index))   
+    0.5*(abs2.(currMove)+abs2.(view(prevMove,:,index)))+α*abs2.(view(prevMove,:,3-index))   
 end
 
 function FieldF(A)
@@ -81,4 +81,4 @@ PDE = SchrodingerPDEPolynomic(boundaries, σ, Nop, Start, T, FieldF)
 #full_algorithm(Solver,PDE,grid2d,start)
 
 
-solve(Float64,CPUBackend,PDE,2,τ=0.5,hx=0.4,hy=0.2)
+@pprof solve(Float64,CPUBackend,PDE,4,4,5,τ=0.05,Nx=300,Ny=300)
