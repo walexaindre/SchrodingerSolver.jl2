@@ -25,6 +25,7 @@ T = 100.0
 
 function N0(prev, current, index::Int)
     p_idx = view(prev, :, index)
+
     out = 0.5 * (abs2.(p_idx) + abs2.(current))
     if index == 1
         v2 = abs2.(view(prev, :, 2))
@@ -49,4 +50,4 @@ end
 
 PDE = SchrodingerPDEPolynomic(boundaries, σ, N0, Start, T, FieldF)
 
-solve(Float64, CPUBackend, PDE, 4, 4, 5, τ = 0.005, Nx = 2000)
+solve(Float64, CPUBackend, PDE, 2, τ = 0.005, Nx = 2000)

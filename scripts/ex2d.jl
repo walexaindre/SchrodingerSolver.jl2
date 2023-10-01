@@ -29,22 +29,22 @@ end
 
 #  PDE_Meta.N(prevIteration,nextIteration,index)
 
+function N0(prev, current, index::Int)
+    p_idx = view(prev, :, index)
 
-function N0(prev,current,index::Int)     
-    p_idx = view(prev,:,index)
-    out = 0.5*(abs2.(p_idx)+abs2.(current))
-    if index==1
-        v2 = abs2.(view(prev,:,2))
-        v3 = abs2.(view(prev,:,3))
-        out+= (2.0/3.0)*v2+v3
-    elseif index==2
-        v1 = abs2.(view(prev,:,1))
-        v3 = abs2.(view(prev,:,3))
-        out+= (2.0/3.0)*(v1.+v3)
-    elseif index==3
-        v1 = abs2.(view(prev,:,1))
-        v2 = abs2.(view(prev,:,2))
-        out+= v1.+(2.0/3.0)*v2
+    out = -0.5 * (abs2.(p_idx) - abs2.(current))
+    if index == 1
+        v2 = abs2.(view(prev, :, 2))
+        v3 = abs2.(view(prev, :, 3))
+        out -= (2.0 / 3.0) * v2 + v3
+    elseif index == 2
+        v1 = abs2.(view(prev, :, 1))
+        v3 = abs2.(view(prev, :, 3))
+        out -= (2.0 / 3.0) * (v1 .+ v3)
+    elseif index == 3
+        v1 = abs2.(view(prev, :, 1))
+        v2 = abs2.(view(prev, :, 2))
+        out -= v1 .+ (2.0 / 3.0) * v2
     end
     out
 end
@@ -58,4 +58,4 @@ Start=[ψ01,ψ02,ψ03]
 PDE = SchrodingerPDEPolynomic(boundaries, σ, N0, Start, T, FieldF)
 #@show (2*pi/80)/(8*pi)
 #@pprof
-solve(Float64,CPUBackend,PDE,2,τ=(2*pi/100)/(8*pi),Nx=100,Ny=100)
+solve(Float64,CPUBackend,PDE,2,τ=(2*pi/200)/(8*pi),Nx=200,Ny=200)
