@@ -1,0 +1,44 @@
+Profiler ran for 40.32 ms, capturing 8857 events.
+
+Host-side activity: calling CUDA APIs took 38.56 ms (95.63% of the trace)
+┌──────────┬───────────┬───────┬───────────┬───────────┬──────────┬─────────────────────────────┐
+│ Time (%) │      Time │ Calls │  Avg time │  Min time │ Max time │ Name                        │
+├──────────┼───────────┼───────┼───────────┼───────────┼──────────┼─────────────────────────────┤
+│   62.61% │  25.25 ms │   411 │  61.43 µs │    1.9 µs │ 696.2 µs │ cudaMemcpyAsync             │
+│   11.16% │    4.5 ms │    28 │ 160.79 µs │   96.1 µs │ 175.2 µs │ cuMemFree                   │
+│    7.99% │   3.22 ms │   381 │   8.45 µs │    7.3 µs │  19.4 µs │ cudaStreamSynchronize       │
+│    5.89% │   2.37 ms │  1195 │   1.99 µs │    1.4 µs │  36.6 µs │ cudaLaunchKernel            │
+│    2.83% │   1.14 ms │    41 │  27.87 µs │    3.0 µs │ 153.3 µs │ cuMemAlloc                  │
+│    1.65% │  663.6 µs │   381 │   1.74 µs │    1.5 µs │   4.8 µs │ cudaFuncGetAttributes       │
+│    0.85% │  343.8 µs │     3 │  114.6 µs │    7.6 µs │ 327.9 µs │ cuMemcpyDtoDAsync           │
+│    0.83% │  336.6 µs │   381 │ 883.46 ns │ 499.95 ns │  34.5 µs │ cudaEventRecord             │
+│    0.67% │  269.0 µs │  1143 │ 235.35 ns │  99.94 ns │   9.8 µs │ cudaStreamGetCaptureInfo_v2 │
+│    0.42% │  169.4 µs │    68 │   2.49 µs │    1.4 µs │  11.0 µs │ cuLaunchKernel              │
+│    0.37% │  149.1 µs │  1927 │  77.37 ns │    0.0 ns │ 300.0 ns │ cudaGetLastError            │
+│    0.00% │ 900.01 ns │     6 │  150.0 ns │    0.0 ns │ 300.0 ns │ cuDeviceGet                 │
+└──────────┴───────────┴───────┴───────────┴───────────┴──────────┴─────────────────────────────┘
+
+Device-side activity: GPU was busy for 24.48 ms (60.70% of the trace)
+┌──────────┬───────────┬───────┬───────────┬──────────┬───────────┬──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ Time (%) │      Time │ Calls │  Avg time │ Min time │  Max time │ Name                                                                                                                                                                                                                                             │
+├──────────┼───────────┼───────┼───────────┼──────────┼───────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│   19.82% │   7.99 ms │   377 │   21.2 µs │ 19.42 µs │  25.37 µs │ _Z15axpy_kernel_valI7double2S0_Ev19cublasAxpyParamsValIT_S2_T0_E                                                                                                                                                                                 │
+│   19.24% │   7.76 ms │   351 │  22.11 µs │ 19.74 µs │  23.58 µs │ _Z10dot_kernelI7double2Li64ELi1E15cublasDotParamsI16cublasGemvTensorIKS0_E30cublasGemvTensorStridedBatchedIS0_EEEvT2_                                                                                                                            │
+│    8.15% │   3.29 ms │    28 │ 117.42 µs │ 59.23 µs │ 123.13 µs │ _ZN8cusparse15csrmv_v3_kernelILb0EiiNS_7ComplexIdEES2_S2_S2_vEEvNS_12KernelCoeffsIT5_EEPKT1_PKT0_S8_PKT2_S9_iiPKT3_PT4_PS6_PS4_                                                                                                                  │
+│    4.75% │   1.92 ms │   351 │   5.46 µs │  5.15 µs │   6.46 µs │ _Z20reduce_1Block_kernelI7double2Li64ELi6E30cublasGemvTensorStridedBatchedIS0_ES2_S2_EvPKT_S3_T2_iS5_S3_T3_T4_19cublasPointerMode_t18cublasLtEpilogue_tS1_IKN8biasTypeINS8_10value_typeES3_E4typeEE                                              │
+│    1.82% │ 735.86 µs │    30 │  24.53 µs │ 23.33 µs │  35.61 µs │ _Z11nrm2_kernelI7double2ddLi0ELi1ELi128EEv16cublasNrm2ParamsIiT_T1_E                                                                                                                                                                             │
+│    1.61% │ 647.61 µs │   381 │    1.7 µs │  1.63 µs │   2.21 µs │ [copy device to pageable memory]                                                                                                                                                                                                                 │
+│    1.19% │ 480.39 µs │    28 │  17.16 µs │ 16.58 µs │  17.66 µs │ _ZN8cusparse25csrmv_v3_partition_kernelILi256ENS_26VectorScalarMultiplyPolicyEiiNS_7ComplexIdEES3_S3_EEvPKT2_T1_S4_iPS7_NS_11KernelCoeffIT5_EES7_PT4_                                                                                            │
+│    1.14% │ 459.47 µs │    30 │  15.32 µs │  14.5 µs │   16.0 µs │ _Z11nrm2_kernelIdddLi0ELi0ELi128EEv16cublasNrm2ParamsIiT_T1_E                                                                                                                                                                                    │
+│    1.02% │ 412.07 µs │    26 │  15.85 µs │ 15.17 µs │  17.25 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE1_S5_I8ExtrudedIS0_IS1_IS2_ELi1ELi1EES5_I4BoolES5_IS7_EES2_EES7_                                         │
+│    0.99% │ 398.64 µs │    27 │  14.76 µs │ 13.63 µs │  17.09 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE8identityS5_IS1_IS2_EEES7_                                                                               │
+│    0.20% │  81.11 µs │     3 │  27.04 µs │ 26.75 µs │  27.23 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE1_S5_I8ExtrudedIS0_IS1_IS2_ELi1ELi1EES5_I4BoolES5_IS7_EES9_IS0_IS1_IS2_ELi1ELi1EES5_IS10_ES5_IS7_EEEES7_ │
+│    0.18% │  72.25 µs │     3 │  24.08 µs │ 23.42 µs │   24.9 µs │ [copy device to device memory]                                                                                                                                                                                                                   │
+│    0.16% │  63.26 µs │    30 │   2.11 µs │  1.12 µs │   2.24 µs │ [copy pageable to device memory]                                                                                                                                                                                                                 │
+│    0.15% │  58.81 µs │     4 │   14.7 µs │ 14.27 µs │  15.04 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7Float64Li1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE4abs2S4_I8ExtrudedIS0_I7ComplexIS1_ELi1ELi1EES4_I4BoolES4_IS6_EEEES6_                                              │
+│    0.09% │  35.58 µs │     3 │  11.86 µs │ 11.71 µs │   12.1 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7Float64Li1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE1_S4_I8ExtrudedIS0_IS1_Li1ELi1EES4_I4BoolES4_IS6_EES8_IS0_IS1_Li1ELi1EES4_IS9_ES4_IS6_EEEES6_                      │
+│    0.06% │  22.27 µs │     1 │  22.27 µs │ 22.27 µs │  22.27 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE1_S5_I8ExtrudedIS0_IS2_Li1ELi1EES5_I4BoolES5_IS7_EES9_IS0_IS1_IS2_ELi1ELi1EES5_IS10_ES5_IS7_EEEES7_      │
+│    0.05% │  19.17 µs │     1 │  19.17 µs │ 19.17 µs │  19.17 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE8identityS5_I8ExtrudedIS0_IS1_IS2_ELi1ELi1EES5_I4BoolES5_IS7_EEEES7_                                     │
+│    0.05% │  18.46 µs │     1 │  18.46 µs │ 18.46 µs │  18.46 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7ComplexI7Float64ELi1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE1_S5_IS2_8ExtrudedIS0_IS1_IS2_ELi1ELi1EES5_I4BoolES5_IS7_EEEES7_                                         │
+│    0.05% │  18.18 µs │     2 │   9.09 µs │  7.52 µs │  10.66 µs │ _Z16broadcast_kernel15CuKernelContext13CuDeviceArrayI7Float64Li1ELi1EE11BroadcastedI12CuArrayStyleILi1EE5TupleI5OneToI5Int64EE1_S4_IS1_8ExtrudedIS0_IS1_Li1ELi1EES4_I4BoolES4_IS6_EEEES6_                                                        │
+└──────────┴───────────┴───────┴───────────┴──────────┴───────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘

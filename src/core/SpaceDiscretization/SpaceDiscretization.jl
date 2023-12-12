@@ -64,12 +64,12 @@ function get_A_format_IJV(::Type{T},
         count += 2
         start_depth = 1
         end_depth = 1
-        push!(value, fill(α, 2 * ndims(Mesh))...)
+        append!(value,fill(α, 2 * ndims(Mesh)))
     end
     if (β != 0)
         count += 2
         end_depth = 2
-        push!(value, fill(β, 2 * ndims(Mesh))...)
+        append!(value,fill(β, 2 * ndims(Mesh)))
     end
 
     if (α == 0 && β != 0)

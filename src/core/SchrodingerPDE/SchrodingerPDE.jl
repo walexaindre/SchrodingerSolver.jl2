@@ -1,6 +1,5 @@
 include("SchrodingerPDETypes.jl")
 
-
 @inline function get_space_dimension(PDE_Meta::SchrodingerPDE)
     size(PDE_Meta.boundaries, 2)
 end
@@ -9,7 +8,9 @@ end
     size(PDE_Meta.ψ₀, 1)
 end
 
-@inline function eval_component(PDE_Meta::SchrodingerPDENonPolynomic, index::Int, arguments...)
+@inline function eval_component(PDE_Meta::SchrodingerPDENonPolynomic,
+    index::Int,
+    arguments...)
     PDE_Meta.f[index](arguments...)
 end
 
@@ -17,8 +18,11 @@ end
     PDE_Meta.ψ₀[index](arguments...)
 end
 
-@inline function eval_optimized_potential(PDE_Meta::SchrodingerPDEPolynomic,prevIteration,nextIteration,index)
-    PDE_Meta.N(prevIteration,nextIteration,index)
+@inline function eval_optimized_potential(PDE_Meta::SchrodingerPDEPolynomic,
+    prevIteration,
+    nextIteration,
+    index)
+    PDE_Meta.N(prevIteration, nextIteration, index)
 end
 
 @inline function eval_field(PDE_Meta::SchrodingerPDE, arguments...)
@@ -43,7 +47,10 @@ end
 
 #Base methods
 
-@inline function Base.ndims(PDE::SchrodingerPDE)
-    size(PDE.boundaries,2)
-end
+@inline Base.ndims(PDE::SchrodingerPDE) = size(PDE.boundaries, 2)
 
+@inline Base.length(PDE::SchrodingerPDE) = get_total_components(PDE)
+
+@inline Base.eltype(::Type{SchrodingerPDENonPolynomic{T, V, W}}) where {T, V, W} = T
+
+@inline Base.eltype(::Type{SchrodingerPDEPolynomic{T, V, W}}) where {T, V, W} = T

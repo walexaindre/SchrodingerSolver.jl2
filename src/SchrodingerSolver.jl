@@ -1,5 +1,6 @@
 module SchrodingerSolver
 using CUDA
+using CUDA.CUSPARSE
 using MKLSparse
 using LinearAlgebra
 using LinearSolve
@@ -15,6 +16,8 @@ using ProgressMeter
 using SparseMatricesCSR
 using Dictionaries
 using PrettyTables
+
+
 include("./core/index.jl")
 
 end

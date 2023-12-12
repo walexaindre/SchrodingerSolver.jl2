@@ -348,72 +348,6 @@ function full_algorithmX(start_state, timesteps::Int,
     end
 end
 
-function calculate_dim_h(a::T, b::T, N::Int) where {T <: AbstractFloat}
-    (b - a) / (N - 1)
-end
-
-function parse_input_dim_args(::Type{T},
-    expected_dims::Int, PDE::SchrodingerPDE;
-    kwargs...) where {T <: AbstractFloat}
-    h = zeros(T, expected_dims)
-    N = zeros(Int64, expected_dims)
-    dim_ranges = Array{AbstractRange{T}}(undef, expected_dims)
-    time_end = get_end_time(PDE)
-
-    if haskey(kwargs, :τ)
-        τ = kwargs[:τ]
-        if τ <= 0 || !isa(τ, T)
-            throw(DomainError(τ,
-                "τ is expected to be a non zero and positive float value with type $(typeof(T))..."))
-        end
-        time_steps = ceil(Int64, time_end / τ)
-    elseif haskey(kwargs, :time_steps)
-        time_steps = kwargs[:time_steps]
-        if time_steps <= 0 || !isa(time_steps, Int)
-            throw(DomainError(time_steps,
-                "time_steps is expected to be a non zero and positive integer..."))
-        end
-        τ = convert(T, time_end / time_steps)
-
-    else
-        throw(ArgumentError("You must provide total count of timesteps (time_steps::Int) or time step (τ::$(typeof(T)))..."))
-    end
-
-    for (dim, keyh, keyN) in zip([1, 2, 3], [:hx, :hy, :hz], [:Nx, :Ny, :Nz])
-        if expected_dims >= dim
-            lb, rb = get_boundary(PDE, dim)
-            if haskey(kwargs, keyh)
-                hval = kwargs[keyh]
-
-                drange = lb:hval:rb
-                nval = size(drange, 1)
-
-                if hval <= 0
-                    throw(DomainError(hval,
-                        "Solver only works with non zero and positive step $(keyh) in dimension index $(dim)..."))
-                end
-            elseif haskey(kwargs, keyN)
-                nval = kwargs[keyN]
-                hval = calculate_dim_h(lb, rb, nval)
-
-                if nval <= 0
-                    throw(DomainError(nval,
-                        "Solver only works with non zero and positive divisions $(keyN) in dimension with index $(dim)..."))
-                end
-            else
-                throw(ArgumentError("Expected $(keyh) or $(keyN). You must define one of them..."))
-            end
-
-            N[dim] = nval
-            h[dim] = hval
-            dim_ranges[dim] = lb:hval:rb
-        else
-            break
-        end
-    end
-
-    h, N, dim_ranges, τ, time_steps
-end
 
 function solve(::Type{T},
     ::Type{CPUBackend},
@@ -474,9 +408,9 @@ function solve(::Type{T},
         B = 4im * A + βτ * σ * D
         C = 4im * A - βτ * σ * D
 
-        display(C |> Array)
+        #display(C |> Array)
         dkeys[store_idx] = (σ, βτ)
-        dvalues[store_idx] = MetaKer2(C, lu(B))
+        dvalues[store_idx] = MetaKer2(C, lu(B),nothing)
         store_idx += 1
     end
 

@@ -212,9 +212,9 @@ end
     length(Mesh)
 end
 
-@inline Base.eltype(Mesh::MetaMesh1D) = Int64
-@inline Base.eltype(Mesh::MetaMesh2D) = (Int64,Int64)
-@inline Base.eltype(Mesh::MetaMesh3D) = (Int64,Int64,Int64)
+@inline Base.eltype(::Type{MetaMesh1D}) = Int64
+@inline Base.eltype(::Type{MetaMesh2D}) = (Int64,Int64)
+@inline Base.eltype(::Type{MetaMesh3D}) = (Int64,Int64,Int64)
     
 function Base.iterate(AbstractMesh::MetaMesh, state::Int = 1)
     state > length(AbstractMesh) ? nothing : (linear_indexing(state,AbstractMesh),state+1)

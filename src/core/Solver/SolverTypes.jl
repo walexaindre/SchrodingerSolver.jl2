@@ -13,9 +13,10 @@ struct MetaKernel{T<:OperatorOrMatrix}
     preconditionerB
 end
 
-struct MetaKer2{T<:OperatorOrMatrix}
+struct MetaKer2{T<:OperatorOrMatrix,V,W}
     C::T
-    factorizationB
+    factorizationB::V
+    preconditionerB::W
 end
 
 struct PDESolver2{T<:AbstractFloat,Backend<:AbstractBackend,MetaGrid<:MetaMesh,Operator<:OperatorOrMatrix}
