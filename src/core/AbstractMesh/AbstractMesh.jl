@@ -104,6 +104,7 @@ end
     out[1] = index
 
     for dist in start_depth:end_depth
+        @show step_x(index,dist,metadata)...,step_y(index,dist,metadata)...
         out[(4*(dist-1)+2):(4*(dist)+1)] = [step_x(index,dist,metadata)...,step_y(index,dist,metadata)...]
     end
     out    

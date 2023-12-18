@@ -7,6 +7,7 @@ function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat, 
         e₁ = CUDA.zeros(eltype(M),rows)
         e₁[1:1] .= 1.0
         col, _ = gmres(M,e₁,atol=a_tol,rtol=r_tol)
+        
         #Get the number of nonzero entries in the inverse of the first column.
         nnz_entries = count(x->!isapprox(abs2(x),0,atol=a_tol),col)
 
@@ -17,12 +18,12 @@ function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat, 
 
         #Stencil with desired depth
         stencil = get_linear_stencil(1,1,stencil_max_depth,Mesh)
-        
-        #Valid stencil positions at int_index.
-        stencil_used_idx = findall(in(stencil),int_index)
-        
-        #Used stencil positions at stencil.
+
+        #Used stencil positions at stencil by droptolerance.
         stencil_positions = findall(in(int_index),stencil)
+
+        used_stencil_idx = stencil[stencil_positions]
+
 
         nnz_stencil_positions = length(stencil_positions)
 
@@ -30,22 +31,15 @@ function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat, 
 
         J = Array{Int64}(undef,rows*nnz_stencil_positions)
 
-        V = repeat(col[int_index][stencil_positions]|>Array,cols)
+        V = repeat(col[used_stencil_idx]|>Array,cols)
 
-        display(col[int_index][stencil_positions]|>Array)
-        display(col[int_index]|>Array)
-        display(col[1:13]|>Array)
-        #gmres
 
-        display(get_linear_stencil(1,
-        1,
-        stencil_max_depth,
-        Mesh)[stencil_positions])
-
-        display(get_linear_stencil(2,
-        1,
-        stencil_max_depth,
-        Mesh)[stencil_positions])
+        #@show "Stencil used"
+        #display(stencil_used_idx)
+        @show "Stencil pos"
+        display(stencil_positions)
+        @show "int ndex"
+        display(int_index)
 
         @threads for idx in 1:length(Mesh)
             I[(nnz_stencil_positions * (idx - 1) + 1):(nnz_stencil_positions * idx)] .= get_linear_stencil(idx,
@@ -56,11 +50,5 @@ function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat, 
             #Column is always the same.
             J[(nnz_stencil_positions * (idx - 1) + 1):(nnz_stencil_positions * idx)] .= idx
         end
-
-
-        #Iterator lenght step. (Columns are independent. Construction of preconditioner can be done in parallel)
-        itlen = length(stencil_used_idx)
-
-    ##@warn
     return I,J,V
 end
