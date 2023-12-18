@@ -20,8 +20,6 @@ end
 @inline Base.firstindex(CompositionMethod::SymmetricTimeCompositionMethod) = 1
 @inline Base.lastindex(CompositionMethod::SymmetricTimeCompositionMethod) = length(CompositionMethod)
 
-
-
 @inline function Base.getindex(CompositionMethod::SymmetricTimeCompositionMethod, index::Int)
     @boundscheck begin
         if !(1 <= index <= length(CompositionMethod))

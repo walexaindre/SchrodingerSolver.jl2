@@ -296,7 +296,7 @@ function solve(::Type{T},
             (y, x) -> ldiv_ilu0!(B_ILU02GPU, x, y, z_storage))
 
         C = (4im * A - βτ * σ * D) |> CuSparseMatrixCSR
-        return B;
+        return B,Mesh;
         dkeys[store_idx] = (σ, βτ)
         dvalues[store_idx] = MetaKer2(C, B, opM)
         store_idx += 1

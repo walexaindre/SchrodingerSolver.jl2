@@ -133,9 +133,9 @@ function dropgpu(M::CUSPARSE.CuSparseMatrixCSR, τ = 0.0001::AbstractFloat)
         itlen = length(int_index)
 
         lock(lockIJV) do
-            I[current_idx+1:current_idx+itlen].=int_index
-            J[current_idx+1:current_idx+itlen].=col_idx
-            V[current_idx+1:current_idx+itlen].=col[bitindex]
+            I[current_idx+1:current_idx+itlen].= int_index
+            J[current_idx+1:current_idx+itlen].= col_idx
+            V[current_idx+1:current_idx+itlen].= col[bitindex]
             current_idx+=itlen
         end
         next!(p)

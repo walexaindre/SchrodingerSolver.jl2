@@ -58,7 +58,9 @@ function parse_input_dim_args(::Type{T},
     for (dim, keyh, keyN) in zip([1, 2, 3], [:hx, :hy, :hz], [:Nx, :Ny, :Nz])
         if expected_dims >= dim
             lb, rb = get_boundary(PDE, dim)
-            if haskey(kwargs, keyh)
+            if haskey(kwargs,keyh) && haskey(kwargs,keyN)
+                throw(ArgumentError("You can't provide $(keyN) and $(keyh) at the same time..."))
+            elseif haskey(kwargs, keyh)
                 hval = kwargs[keyh]
 
                 if hval <= 0
