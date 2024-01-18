@@ -1,12 +1,19 @@
 export drop
+"""
+    Sparse Inverse Approximation 
 
+    Return Format
+
+    I J V ( ..[I[k],J[k]]=V[k] )
+"""
 function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat;
         stencil_min_depth::Int = 1, stencil_max_depth::Int = 3,
         r_tol::AbstractFloat = 700 * eps(real(eltype(M))),
-        a_tol::AbstractFloat = 700 * eps(real(eltype(M))))
+        a_tol::AbstractFloat = 700 * eps(real(eltype(M))))::Tuple{CuArray,CuArray,CuArray}
     rows, _ = size(M)
 
     e₁ = CUDA.zeros(eltype(M), rows)
+
     e₁[1:1] .= 1.0
 
     col, _ = gmres(M, e₁, atol = a_tol, rtol = r_tol) #Ax=e₁ (First column inverse)
@@ -28,7 +35,7 @@ function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat;
 
     nnz_stencil_positions = length(undropped_stencil_positions)
 
-    #Checking a_ij==a_ji
+    #Checking a_ij==a_ji this check is flawed. You need other interpretation for this... [TODO] rework this kind of validation
     if 1:nnz_stencil_positions != undropped_stencil_positions
         @warn "Problem with matrix entries (a_ij!=a_ji). Use a different drop tolerance..."
     end
@@ -43,7 +50,7 @@ function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat;
     J = Array{Int64}(undef, rows * nnz_stencil_positions)
 
     #Values are always the same for every column.
-    V = Array{Int64}(undef, rows * nnz_stencil_positions)
+    V = Array{eltype(M)}(undef, rows * nnz_stencil_positions)
 
     #IJV Construction can be done in parallel.
     @threads for idx in 1:length(Mesh)
@@ -64,5 +71,5 @@ function drop(M::CuSparseMatrixCSR, Mesh::MetaMesh, τ = 0.0001::AbstractFloat;
         #Values are always the same.
         V[pos_to_modify] .= ê₁
     end
-    return I, J, V
+    return I|>CuArray, J|>CuArray, V|>CuArray
 end

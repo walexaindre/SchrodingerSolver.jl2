@@ -97,9 +97,9 @@ end
         
 
         #Temporary Checks...
-        if !all(isfinite,zl)
-            throw("Unbounded...")
-        end
+        #if !all(isfinite,zl)
+        #    throw("Unbounded...")
+        #end
 
         zcomp .-= zl
 
@@ -222,9 +222,9 @@ end
         
 
         #Temporary Checks...
-        if !all(isfinite,zl)
-            throw("Unbounded...")
-        end
+        #if !all(isfinite,zl)
+        #    throw("Unbounded...")
+        #end
 
         zcomp .-= zl
 
@@ -407,10 +407,11 @@ function solve(::Type{T},
         TimeMultipliers)
         B = 4im * A + βτ * σ * D
         C = 4im * A - βτ * σ * D
-
+        
         #display(C |> Array)
         dkeys[store_idx] = (σ, βτ)
         dvalues[store_idx] = MetaKer2(C, lu(B),nothing)
+
         store_idx += 1
     end
 

@@ -25,26 +25,108 @@ function test_ilu_preconditioner(::Type{T}, Op::LinearOperator) where {T <: Abst
     end
 end
 
+@inline function update_component!(index::Int,
+        τ::T,
+        σ::T,
+        OptionSolver::SolverOptionsGPU,
+        Memory::BackendMemoryCUDA) where {T <: AbstractFloat}
+
+    PDE = OptionSolver.PDE
+
+    zl = Memory.component_place
+    prev_zl = view(Memory.current_state, :, index)
+    current_state = Memory.current_state
+
+    b0_temp = Memory.b0_temp
+    b_temp = Memory.b_temp
+    zcomp = Memory.zcomp
+    KrylovSolver = Memory.solver_memory
+
+    #dst, src
+    copy!(zl, prev_zl)
+
+    opA = get_A(OptionSolver.Solver)
+    Ker = get_Ker(OptionSolver.Solver, σ, τ)
+
+    b0_temp .= Ker.C * zl
+
+    success = false
+
+    #@showprogress "Update Component Loop" enabled=showprogress barlen=40 showspeed=true offset=showprogress_offset 
+    for l in 1:max_iterations
+
+        #dst, src
+        copy!(b_temp, b0_temp)
+
+        broadcast!(*,
+            zcomp,
+            eval_optimized_potential(PDE, current_state, zl, index),
+            zl .+ prev_zl)
+
+        b_temp .-= τ * (opA * zcomp)
+
+        #dst, src
+        copy!(zcomp, zl)
+        gmres!(KrylovSolver,
+            Ker.factorizationB,
+            restart = true,
+            M = Ker.preconditionerB,
+            b_temp,
+            atol = a_tol,
+            rtol = r_tol)
+        copy!(zl, KrylovSolver.x)
+
+        zcomp .-= zl
+
+        #CUDA.@profile norm(zl)
+
+        best_norm = get_square_root_measure(Grid) * norm(zl)
+        diff_norm = get_square_root_measure(Grid) * norm(zcomp)
+        #@show best_norm diff_norm r_tol*best_norm+a_tol
+
+        if diff_norm < a_tol + r_tol * best_norm
+            if (l > 149)
+                plot_inner(current_state, Grid, current_time)
+                println("Diff: $(diff_norm) Best: $(diff_norm)")
+            end
+            update_stats(Stats, 0, l)
+
+            success = true
+            break
+        end
+    end
+
+    if !success
+        println("Warning... unsucceful convergence after max_iteration: ", max_iterations)
+
+        throw("Error...")
+    end
+
+    copy!(prev_zl, zl)
+
+    nothing
+end
+
 @inline function update_component!(Solver::PDESolver2,
-    KrylovSolver::GmresSolver,
-    PDE::SchrodingerPDEPolynomic,
-    Grid::SpaceTimeGrid,
-    Stats::PDESolverStats,
-    b_temp::AbstractArray{Complex{T}},
-    b0_temp::AbstractArray{Complex{T}},
-    zcomp::AbstractArray{Complex{T}},
-    current_state::AbstractArray{Complex{T}},
-    component_place::AbstractArray{Complex{T}},
-    index::Int,
-    current_time::Int,
-    τ::T,
-    σ::T,
-    a_tol::T,
-    r_tol::T,
-    max_iterations::Int,
-    showprogress::Bool,
-    showprogress_offset::Int,
-    verbose::Int) where {T <: AbstractFloat}
+        KrylovSolver::GmresSolver,
+        PDE::SchrodingerPDEPolynomic,
+        Grid::SpaceTimeGrid,
+        Stats::PDESolverStats,
+        b_temp::AbstractArray{Complex{T}},
+        b0_temp::AbstractArray{Complex{T}},
+        zcomp::AbstractArray{Complex{T}},
+        current_state::AbstractArray{Complex{T}},
+        component_place::AbstractArray{Complex{T}},
+        index::Int,
+        current_time::Int,
+        τ::T,
+        σ::T,
+        a_tol::T,
+        r_tol::T,
+        max_iterations::Int,
+        showprogress::Bool,
+        showprogress_offset::Int,
+        verbose::Int) where {T <: AbstractFloat}
 
     #assignation
 
@@ -65,46 +147,50 @@ end
     #@showprogress "Update Component Loop" enabled=showprogress barlen=40 showspeed=true offset=showprogress_offset 
     for l in 1:max_iterations
 
+        #dst, src
+        copy!(b_temp, b0_temp)
 
-            #dst, src
-            copy!(b_temp, b0_temp)
+        broadcast!(*,
+            zcomp,
+            eval_optimized_potential(PDE, current_state, zl, index),
+            zl .+ prev_zl)
 
-            broadcast!(*,
-                zcomp,
-                eval_optimized_potential(PDE, current_state, zl, index),
-                zl .+ prev_zl)
+        b_temp .-= τ * (opA * zcomp)
 
-            b_temp .-= τ * (opA * zcomp)
+        #dst, src
+        copy!(zcomp, zl)
+        gmres!(KrylovSolver,
+            Ker.factorizationB,
+            restart = true,
+            M = Ker.preconditionerB,
+            b_temp,
+            atol = a_tol,
+            rtol = r_tol)
+        copy!(zl, KrylovSolver.x)
+        #Temporary Checks...
+        #if !all(isfinite, zl)
+        #    throw("Unbounded...")
+        #end
 
-            #dst, src
-            copy!(zcomp, zl)
-            gmres!(KrylovSolver, Ker.factorizationB, b_temp, atol = a_tol, rtol = r_tol)
-            copy!(zl, KrylovSolver.x)
-            #Temporary Checks...
-            #if !all(isfinite, zl)
-            #    throw("Unbounded...")
-            #end
+        #display(KrylovSolver.stats)
+        zcomp .-= zl
 
-            #display(KrylovSolver.stats)
-            zcomp .-= zl
+        #CUDA.@profile norm(zl)
 
-            #CUDA.@profile norm(zl)
+        best_norm = get_square_root_measure(Grid) * norm(zl)
+        diff_norm = get_square_root_measure(Grid) * norm(zcomp)
+        #@show best_norm diff_norm r_tol*best_norm+a_tol
 
-            best_norm = get_square_root_measure(Grid) * norm(zl)
-            diff_norm = get_square_root_measure(Grid) * norm(zcomp)
-            #@show best_norm diff_norm r_tol*best_norm+a_tol
-
-            if diff_norm < a_tol + r_tol * best_norm
-                if (l > 149)
-                    plot_inner(current_state, Grid, current_time)
-                    println("Diff: $(diff_norm) Best: $(diff_norm)")
-                end
-                update_stats(Stats, 0, l)
-
-                success = true
-                break
+        if diff_norm < a_tol + r_tol * best_norm
+            if (l > 149)
+                plot_inner(current_state, Grid, current_time)
+                println("Diff: $(diff_norm) Best: $(diff_norm)")
             end
+            update_stats(Stats, 0, l)
 
+            success = true
+            break
+        end
     end
 
     if !success
@@ -119,11 +205,11 @@ end
 end
 
 function full_algorithmY(start_state, timesteps::Int,
-    time_substeps::AbstractArray{T},
-    Solver::PDESolver2, Grid::SpaceTimeGrid, PDE::SchrodingerPDE,
-    fixed_innerloop_steps::Int,
-    r_tol::T,
-    a_tol::T, showprogress::Bool, verbose::Int) where {T <: AbstractFloat}
+        time_substeps::AbstractArray{T},
+        Solver::PDESolver2, Grid::SpaceTimeGrid, PDE::SchrodingerPDE,
+        fixed_innerloop_steps::Int,
+        r_tol::T,
+        a_tol::T, showprogress::Bool, verbose::Int) where {T <: AbstractFloat}
 
     #Startup Data
     Stats = PDESolverStats(Dictionary{Int64, Int64}(), zeros(Float64, 1))
@@ -213,7 +299,7 @@ function full_algorithmY(start_state, timesteps::Int,
 
             #close(filebuff)
             #close(io)
-            throw("io end")
+            #throw("io end")
         end
 
         if step % 100 == 0
@@ -224,20 +310,149 @@ function full_algorithmY(start_state, timesteps::Int,
     end
 end
 
+function initialize(::Type{T},
+        ::Type{GPUBackend},
+        PDE::SchrodingerPDE,
+        space_order::Int = 2,
+        time_order::Int = 2,
+        time_composition_substeps::Int = 1,
+        time_composition_index::Int = 1;
+        fixed_innerloop_steps::Int = 0,
+        r_tol::T = 700 * eps(T),
+        a_tol::T = 700 * eps(T),
+        showprogress::Bool = true,
+        verbose::Int = 0,
+        kwargs...) where {T <: AbstractFloat}
+    Grid, TimeCollection, TimeMultipliers, time_steps, σset = parse_input_parameters(T,
+        GPUBackend,
+        time_order,
+        time_composition_substeps,
+        time_composition_index)
+
+    Mesh = get_metadata(Grid)
+    A = get_sparsematrix_A(T, Mesh, space_order)
+    D = get_sparsematrix_D(Grid, space_order)
+
+    #We need to generate B, C for all time multipliers....
+    dkeys = Array{Tuple{T, T}}(undef, length(σset) * length(TimeMultipliers))
+    dvalues = Array{MetaKer2}(undef, length(σset) * length(TimeMultipliers))
+
+    store_idx = 1
+    #Preconditioner and Calculations
+
+    @showprogress "Preconditioner start and checks" barlen=40 showspeed=true enabled=showprogress for (σ, βτ) in product(σset,
+        TimeMultipliers)
+        B = (4im * A + βτ * σ * D) |> CuSparseMatrixCSR
+
+        opM = sparse(drop(B, Mesh)..., fmt = :csr)
+
+        C = (4im * A - βτ * σ * D) |> CuSparseMatrixCSR
+
+        dkeys[store_idx] = (σ, βτ)
+        dvalues[store_idx] = MetaKer2(C, B, opM)
+        store_idx += 1
+    end
+
+    A = convert(SparseMatrixCSC{ComplexF64}, A) |> CuSparseMatrixCSR
+    FactorizationsComponents = Dictionary(dkeys, dvalues)
+
+    PDESolverData = PDESolver2{T, GPUBackend, typeof(Nesh), typeof(A)}(Mesh,
+        FactorizationsComponents,
+        A)
+
+    Memory = initialize_memory(T, length(Mesh), 20)
+
+    "is_initialized = true,
+    r_tol = r_tol,
+    a_tol = a_tol,
+    fixed_innerloop_steps = fixed_innerloop_steps,
+    showprogress = showprogress,
+    verbose = verbose,
+    stats=initialize_statics(),
+    PDE=PDE,
+    Solver = PDESolverData,
+    compute_backend = GPUBackend,
+    data_type = T"
+    SolverOptions{T, GPUBackend}(is_initialized = true,
+        r_tol,
+        a_tol,
+        fixed_innerloop_steps,
+        showprogress,
+        verbose,
+        initialize_statics(),
+        PDE,
+        PDESolverData,
+        GPUBackend,
+        T),
+    Memory
+end
+
+"GPU Step Solver"
+function step!(OptionSolver::SolverOptionsGPU, Memory::BackendMemoryCUDA)
+    begin
+        #Forward
+        for (component_index, σ) in enumerate(σ_f)
+            update_component!(Solver,
+                KrylovSolver,
+                PDE,
+                Grid,
+                Stats,
+                b_temp,
+                b0_temp,
+                zcomp,
+                current_state,
+                component_place,
+                component_index,
+                step,
+                τ,
+                σ,
+                a_tol,
+                r_tol,
+                150,
+                showprogress,
+                2,
+                verbose)
+        end
+
+        #Backward
+        for (reverse_c_index, σ) in zip(total_components:-1:1, σ_r)
+            update_component!(Solver,
+                KrylovSolver, PDE,
+                Grid,
+                Stats,
+                b_temp,
+                b0_temp,
+                zcomp,
+                current_state,
+                component_place,
+                reverse_c_index,
+                step,
+                τ,
+                σ,
+                a_tol,
+                r_tol,
+                150,
+                showprogress,
+                3,
+                verbose)
+        end
+    end
+end
+
 "GPU Solver..."
 function solve(::Type{T},
-    ::Type{GPUBackend},
-    PDE::SchrodingerPDE,
-    space_order::Int = 2,
-    time_order::Int = 2,
-    time_composition_substeps::Int = 1,
-    time_composition_index::Int = 1;
-    fixed_innerloop_steps::Int = 0,
-    r_tol::T = 700 * eps(T),
-    a_tol::T = 700 * eps(T),
-    showprogress::Bool = true,
-    verbose::Int = 0,
-    kwargs...) where {T <: AbstractFloat}
+        ::Type{GPUBackend},
+        PDE::SchrodingerPDE,
+        space_order::Int = 2,
+        time_order::Int = 2,
+        time_composition_substeps::Int = 1,
+        time_composition_index::Int = 1;
+        fixed_innerloop_steps::Int = 0,
+        r_tol::T = 700 * eps(T),
+        a_tol::T = 700 * eps(T),
+        showprogress::Bool = true,
+        verbose::Int = 0,
+        kwargs...) where {T <: AbstractFloat}
 
     #Dimensionality
     expected_dims = ndims(PDE)
@@ -278,25 +493,14 @@ function solve(::Type{T},
     store_idx = 1
     #Preconditioner and Calculations
 
-    #Common storage for preconditioner back and forth...
-    z_storage = CUDA.zeros(Complex{T}, nsz)
-
     @showprogress "Preconditioner start and checks" barlen=40 showspeed=true enabled=showprogress for (σ, βτ) in product(σset,
         TimeMultipliers)
         B = (4im * A + βτ * σ * D) |> CuSparseMatrixCSR
 
-        B_ILU02GPU = ilu02(B)
-
-        symmetric = hermitian = false
-        opM = LinearOperator(ComplexF64,
-            nsz,
-            nsz,
-            symmetric,
-            hermitian,
-            (y, x) -> ldiv_ilu0!(B_ILU02GPU, x, y, z_storage))
-
+        opM = sparse(drop(B, Mesh)..., fmt = :csr)
+        @show "B sz" size(B) "opM sz" size(opM)
         C = (4im * A - βτ * σ * D) |> CuSparseMatrixCSR
-        return B,Mesh;
+
         dkeys[store_idx] = (σ, βτ)
         dvalues[store_idx] = MetaKer2(C, B, opM)
         store_idx += 1
@@ -311,7 +515,6 @@ function solve(::Type{T},
         A)
 
     #Initialization of solver process...
-
 
     state0 = startup_GPU(PDE, Grid)
 

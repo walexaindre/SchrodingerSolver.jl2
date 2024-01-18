@@ -26,6 +26,10 @@ function showstats(Stats::PDESolverStats)
     display(Stats.IterInfo)
 end
 
+function initialize_statics()
+    PDESolverStats(Dictionary{Int64, Int64}(), zeros(Float64, 1))
+end
+
 "Input parsing with some basic checks"
 function parse_input_dim_args(::Type{T},
     expected_dims::Int, PDE::SchrodingerPDE;
