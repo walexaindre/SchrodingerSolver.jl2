@@ -231,6 +231,10 @@ end
     index
 end
 
+@inline function checkbounds_indices(Mesh::Metamesh1D,i::Int)
+    Base.checkindex(Bool,1:Mesh.M,i)
+end
+
 @inline function Base.size(Mesh::MetaMesh1D)
     Mesh.M
 end
@@ -247,6 +251,10 @@ end
         end
     end
     linear_indexing(index, Mesh)
+end
+
+@inline function checkbounds_indices(Mesh::Metamesh2D,i::Int, j::Int)
+    Base.checkbounds_indices(Bool,(1:Mesh.M,1:Mesh.N),(i,j))
 end
 
 @inline function Base.getindex(Mesh::MetaMesh2D, i::Int, j::Int)
@@ -301,6 +309,11 @@ end
         end
     end
     linear_indexing(index, Mesh)
+end
+
+
+@inline function checkbounds_indices(Mesh::Metamesh3D,i::Int, j::Int, k::Int)
+    Base.checkbounds_indices(Bool,(1:Mesh.M,1:Mesh.N,1:Mesh.L),(i,j,k))
 end
 
 @inline function Base.getindex(Mesh::MetaMesh3D, i::Int, j::Int, k::Int)

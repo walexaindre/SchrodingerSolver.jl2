@@ -28,11 +28,10 @@ end
 @inline function update_component!(index::Int,
         τ::T,
         σ::T,
-        OptionSolver::SolverOptionsGPU,
-        Memory::BackendMemoryCUDA) where {T <: AbstractFloat}
-
+        OptionSolver::SchrodingerSolverOptions,
+        Memory::BackendMemoryCUDA{T}) where {T <: AbstractFloat}
     PDE = OptionSolver.PDE
-
+    Stats = OptionSolver.stats
     zl = Memory.component_place
     prev_zl = view(Memory.current_state, :, index)
     current_state = Memory.current_state
@@ -41,6 +40,11 @@ end
     b_temp = Memory.b_temp
     zcomp = Memory.zcomp
     KrylovSolver = Memory.solver_memory
+
+    a_tol = OptionSolver.a_tol
+    r_tol = OptionSolver.r_tol
+
+    Grid = OptionSolver.Solver.Grid
 
     #dst, src
     copy!(zl, prev_zl)
@@ -53,7 +57,7 @@ end
     success = false
 
     #@showprogress "Update Component Loop" enabled=showprogress barlen=40 showspeed=true offset=showprogress_offset 
-    for l in 1:max_iterations
+    for l in 1:OptionSolver.max_iterations
 
         #dst, src
         copy!(b_temp, b0_temp)
@@ -70,7 +74,7 @@ end
         gmres!(KrylovSolver,
             Ker.factorizationB,
             restart = true,
-            M = Ker.preconditionerB,
+            N = Ker.preconditionerB,
             b_temp,
             atol = a_tol,
             rtol = r_tol)
@@ -86,8 +90,6 @@ end
 
         if diff_norm < a_tol + r_tol * best_norm
             if (l > 149)
-                plot_inner(current_state, Grid, current_time)
-                println("Diff: $(diff_norm) Best: $(diff_norm)")
             end
             update_stats(Stats, 0, l)
 
@@ -323,11 +325,12 @@ function initialize(::Type{T},
         showprogress::Bool = true,
         verbose::Int = 0,
         kwargs...) where {T <: AbstractFloat}
+
     Grid, TimeCollection, TimeMultipliers, time_steps, σset = parse_input_parameters(T,
-        GPUBackend,
+        PDE,
         time_order,
         time_composition_substeps,
-        time_composition_index)
+        time_composition_index;kwargs...)
 
     Mesh = get_metadata(Grid)
     A = get_sparsematrix_A(T, Mesh, space_order)
@@ -356,85 +359,59 @@ function initialize(::Type{T},
     A = convert(SparseMatrixCSC{ComplexF64}, A) |> CuSparseMatrixCSR
     FactorizationsComponents = Dictionary(dkeys, dvalues)
 
-    PDESolverData = PDESolver2{T, GPUBackend, typeof(Nesh), typeof(A)}(Mesh,
+    PDESolverData = PDESolver3{T, GPUBackend, typeof(Grid), typeof(A)}(Grid,
         FactorizationsComponents,
         A)
 
-    Memory = initialize_memory(T, length(Mesh), 20)
+    Memory = initialize_memory(T, length(PDE), length(Mesh), 20)
+
+    Memory.current_state .= startup_GPU(PDE,Grid)
 
     "is_initialized = true,
     r_tol = r_tol,
     a_tol = a_tol,
     fixed_innerloop_steps = fixed_innerloop_steps,
+    max_iterations = max_iterations,
     showprogress = showprogress,
     verbose = verbose,
     stats=initialize_statics(),
     PDE=PDE,
     Solver = PDESolverData,
+    time_collection=TimeCollection,
     compute_backend = GPUBackend,
     data_type = T"
-    SolverOptions{T, GPUBackend}(is_initialized = true,
+    SchrodingerSolverOptions{T, GPUBackend}(true,
         r_tol,
         a_tol,
         fixed_innerloop_steps,
+        200,
         showprogress,
         verbose,
         initialize_statics(),
         PDE,
         PDESolverData,
+        TimeCollection,
         GPUBackend,
         T),
     Memory
 end
 
 "GPU Step Solver"
-function step!(OptionSolver::SolverOptionsGPU, Memory::BackendMemoryCUDA)
-    begin
-        #Forward
-        for (component_index, σ) in enumerate(σ_f)
-            update_component!(Solver,
-                KrylovSolver,
-                PDE,
-                Grid,
-                Stats,
-                b_temp,
-                b0_temp,
-                zcomp,
-                current_state,
-                component_place,
-                component_index,
-                step,
-                τ,
-                σ,
-                a_tol,
-                r_tol,
-                150,
-                showprogress,
-                2,
-                verbose)
-        end
+function step!(OptionSolver::SchrodingerSolverOptions, Memory::BackendMemoryCUDA)
+    σ_f = get_σ(OptionSolver.PDE)
+    σ_r = reverse(σ_f)
 
-        #Backward
-        for (reverse_c_index, σ) in zip(total_components:-1:1, σ_r)
-            update_component!(Solver,
-                KrylovSolver, PDE,
-                Grid,
-                Stats,
-                b_temp,
-                b0_temp,
-                zcomp,
-                current_state,
-                component_place,
-                reverse_c_index,
-                step,
-                τ,
-                σ,
-                a_tol,
-                r_tol,
-                150,
-                showprogress,
-                3,
-                verbose)
+    for τ in OptionSolver.time_collection
+        begin
+            #Forward
+            for (component_index, σ) in enumerate(σ_f)
+                update_component!(component_index, τ, σ, OptionSolver, Memory)
+            end
+
+            #Backward
+            for (reverse_c_index, σ) in zip(length(σ_r):-1:1, σ_r)
+                update_component!(reverse_c_index, τ, σ, OptionSolver, Memory)
+            end
         end
     end
 end

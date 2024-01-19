@@ -228,13 +228,17 @@ end
     end
 end
 
-@inline function Base.getindex(Grid::SpaceTimeGrid1D, index::Int)
+@inline function Base.getindex(Grid::SpaceTimeGrid1D{T},row::Int)::Tuple{T} where {T<:AbstractFloat}
     @boundscheck begin
-        if !(1 <= index <= length(Grid.metadata))
-            throw(BoundsError(Grid, index))
+        if !checkbounds_indices(get_metadata(Grid),row)
+            throw(BoundsError(Grid,(row)))
         end
     end
-    Grid.Ωx[linear_indexing(index, Grid.metadata)]
+    Grid.Ωx[row]
+end
+
+@inline function Base.getindex(Grid::SpaceTimeGrid1D{T},::Colon)::Vector{T} where {T<:AbstractFloat}
+    collect(Grid.Ωx)
 end
 
 @inline function Base.getindex(Grid::SpaceTimeGrid2D, index::Int)
@@ -247,6 +251,33 @@ end
     Grid.Ωx[x], Grid.Ωy[y]
 end
 
+@inline function Base.getindex(Grid::SpaceTimeGrid2D{T},row::Int,col::Int)::Tuple{T,T} where {T<:AbstractFloat}
+    @boundscheck begin
+        if !checkbounds_indices(get_metadata(Grid),row,col)
+            throw(BoundsError(Grid,(row,col)))
+        end
+    end
+    Grid.Ωx[row],Grid.Ωy[col]
+end
+
+@inline function Base.getindex(Grid::SpaceTimeGrid2D{T},::Colon,::Colon)::Array{T,2} where {T<:AbstractFloat}
+    [repeat(Grid.Ωx,outer=size(Grid.Ωy)) repeat(Grid.Ωy,inner=size(Grid.Ωx))]
+end
+
+@inline function Base.getindex(Grid::SpaceTimeGrid2D{T},col::Int,::Colon)::Vector{T} where {T<:AbstractFloat}
+    @boundscheck begin
+        if !(1 <= col <= 2)
+            throw(BoundsError(Grid, col))
+        end
+    end
+
+    if col==1
+        return repeat(Grid.Ωx,outer=size(Grid.Ωy))
+    else
+        return repeat(Grid.Ωy,inner=size(Grid.Ωx))
+    end
+end
+
 @inline function Base.getindex(Grid::SpaceTimeGrid3D, index::Int)
     @boundscheck begin
         if !(1 <= index <= length(Grid.metadata))
@@ -255,4 +286,33 @@ end
     end
     x, y, z = linear_indexing(index, Grid.metadata)
     Grid.Ωx[x], Grid.Ωy[y], Grid.Ωz[z]
+end
+
+@inline function Base.getindex(Grid::SpaceTimeGrid3D{T},::Colon,::Colon,::Colon)::Array{T,2} where {T<:AbstractFloat}
+    [repeat(Grid.Ωx,outer=size(Grid.Ωy,1)*size(Grid.Ωz,1)) repeat(Grid.Ωy,inner=size(Grid.Ωx,1),outer=size(Grid.Ωy,1)) repeat(Grid.Ωz,inner=size(Grid.Ωx,1)*size(Grid.Ωy,1))]
+end
+
+@inline function Base.getindex(Grid::SpaceTimeGrid3D{T},row::Int,col::Int,depth::Int)::Tuple{T,T,T} where {T<:AbstractFloat}
+    @boundscheck begin
+        if !checkbounds_indices(get_metadata(Grid),row,col,depth)
+            throw(BoundsError(Grid,(row,col,depth)))
+        end
+    end
+    Grid.Ωx[row],Grid.Ωy[col],Grid.Ωz[depth]
+end
+
+@inline function Base.getindex(Grid::SpaceTimeGrid3D{T},::Colon,col::Int,::Colon)::Vector{T} where {T<:AbstractFloat}
+    @boundscheck begin
+        if !(1 <= col <= 3)
+            throw(BoundsError(Grid, col))
+        end
+    end
+
+    if col==1
+        return repeat(Grid.Ωx,outer=size(Grid.Ωy,1)*size(Grid.Ωz,1))
+    elseif col==2
+        return repeat(Grid.Ωy,inner=size(Grid.Ωx,1),outer=size(Grid.Ωy,1))
+    else
+        return repeat(Grid.Ωz,inner=size(Grid.Ωx,1)*size(Grid.Ωy,1))
+    end
 end

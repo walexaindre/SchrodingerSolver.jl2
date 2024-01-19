@@ -8,7 +8,7 @@
 function parse_input_parameters(::Type{T},PDE::SchrodingerPDE,
     time_order::Int = 2,
     time_composition_substeps::Int = 1,
-    time_composition_index::Int = 1,kwargs...)::Tuple{SpaceTimeGrid,Vector{T},Vector{T},Int,Set}
+    time_composition_index::Int = 1;kwargs...)::Tuple{SpaceTimeGrid,Vector{T},Vector{T},Int,Set} where {T<:AbstractFloat}
 
     #Dimensionality
     expected_dims = ndims(PDE)

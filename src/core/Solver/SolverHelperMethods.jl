@@ -10,7 +10,15 @@ end
     Solver.opA
 end
 
+@inline function get_A(Solver::PDESolver3)
+    Solver.opA
+end
+
 @inline function get_Ker(Solver::PDESolver2, σ::T, τ::T) where {T <: AbstractFloat}
+    Solver.Kernel[(σ, τ)]
+end
+
+@inline function get_Ker(Solver::PDESolver3, σ::T, τ::T) where {T <: AbstractFloat}
     Solver.Kernel[(σ, τ)]
 end
 

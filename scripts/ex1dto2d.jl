@@ -45,5 +45,7 @@ PDE = SchrodingerPDEPolynomic(boundaries, σ, N0, Start, T, FieldF)
 #@show (2*pi/80)/(8*pi)
 #@pprof
 #solve(Float64,CPUBackend,PDE,4,τ=(2*pi/400)/(8*pi),Nx=400,Ny=400)
-sol,mesh= solve(Float64,GPUBackend,PDE,2,τ=(2*pi/100)/(8*pi),Nx=200,Ny=200);
+#sol,mesh= solve(Float64,GPUBackend,PDE,2,τ=(2*pi/100)/(8*pi),Nx=200,Ny=200);
 #sol,mesh= solve(Float64,CPUBackend,PDE,2,τ=(2*pi/500)/(8*pi),Nx=500,Ny=500);
+
+Opt,Memory = initialize(Float64,GPUBackend,PDE,2,τ=(2*pi/100)/(8*pi),Nx=200,Ny=200);

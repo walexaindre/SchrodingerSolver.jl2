@@ -25,6 +25,12 @@ struct PDESolver2{T<:AbstractFloat,Backend<:AbstractBackend,MetaGrid<:MetaMesh,O
     opA::Operator
 end
 
+struct PDESolver3{T<:AbstractFloat,Backend<:AbstractBackend,MetaSpaceTimeGrid<:SpaceTimeGrid,Operator<:OperatorOrMatrix}
+    Grid::MetaSpaceTimeGrid
+    Kernel::Dictionary{Tuple{T,T},MetaKer2}
+    opA::Operator
+end
+
 struct PDESolver{Backend<:AbstractBackend,MetaGrid<:MetaMesh,Operator<:OperatorOrMatrix}
     Grid::MetaGrid
     Kernel::Array{MetaKernel}
