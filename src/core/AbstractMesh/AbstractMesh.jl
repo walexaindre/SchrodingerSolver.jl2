@@ -231,7 +231,7 @@ end
     index
 end
 
-@inline function checkbounds_indices(Mesh::Metamesh1D,i::Int)
+@inline function checkbounds_indices(Mesh::MetaMesh1D,i::Int)
     Base.checkindex(Bool,1:Mesh.M,i)
 end
 
@@ -253,7 +253,7 @@ end
     linear_indexing(index, Mesh)
 end
 
-@inline function checkbounds_indices(Mesh::Metamesh2D,i::Int, j::Int)
+@inline function checkbounds_indices(Mesh::MetaMesh2D,i::Int, j::Int)
     Base.checkbounds_indices(Bool,(1:Mesh.M,1:Mesh.N),(i,j))
 end
 
@@ -312,7 +312,7 @@ end
 end
 
 
-@inline function checkbounds_indices(Mesh::Metamesh3D,i::Int, j::Int, k::Int)
+@inline function checkbounds_indices(Mesh::MetaMesh3D,i::Int, j::Int, k::Int)
     Base.checkbounds_indices(Bool,(1:Mesh.M,1:Mesh.N,1:Mesh.L),(i,j,k))
 end
 

@@ -7,11 +7,11 @@ abstract type SolverOptionsCPU <: SolverOptions end
 abstract type SolverOptionsCPUParallel <: SolverOptions end
 
 mutable struct SchrodingerSolverOptions{
-    ToleranceType <: AbstractFloat,
+    FloatType <: AbstractFloat,
     Backend <: AbstractBackend}
     is_initialized::Bool
-    r_tol::ToleranceType
-    a_tol::ToleranceType
+    r_tol::FloatType
+    a_tol::FloatType
     fixed_innerloop_steps::Int
     max_iterations::Int
     showprogress::Bool
@@ -19,7 +19,9 @@ mutable struct SchrodingerSolverOptions{
     stats::PDESolverStats
     PDE::SchrodingerPDE
     Solver::PDESolver3
-    time_collection::Vector{ToleranceType}
+    start_power::Vector{FloatType}
+    start_energy::FloatType
+    time_collection::Vector{FloatType}
     compute_backend::Type{Backend}
-    data_type::Type{ToleranceType}
+    data_type::Type{FloatType}
 end

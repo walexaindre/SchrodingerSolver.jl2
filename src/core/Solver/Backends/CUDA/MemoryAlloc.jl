@@ -1,7 +1,7 @@
 "
     Memory storage for fixed structures
 "
-struct BackendMemoryCUDA{T <: AbstractFloat}
+struct BackendMemoryCUDA{T <: AbstractFloat} <: BackendMemory
     current_state::CuArray{Complex{T}, 2}
     component_place::CuArray{Complex{T}, 1}
     b_temp::CuArray{Complex{T}, 1}
@@ -17,7 +17,6 @@ function initialize_memory(::Type{T},ncomponents::Int,
     
     state = CUDA.zeros(Complex{T}, element_count, ncomponents)
     mem = CUDA.zeros(Complex{T}, element_count)
-
 
     BackendMemoryCUDA{T}(
         state,

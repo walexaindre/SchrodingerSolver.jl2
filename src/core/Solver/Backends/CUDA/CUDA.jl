@@ -57,7 +57,7 @@ end
     success = false
 
     #@showprogress "Update Component Loop" enabled=showprogress barlen=40 showspeed=true offset=showprogress_offset 
-    for l in 1:OptionSolver.max_iterations
+    for l in 1:(OptionSolver.max_iterations)
 
         #dst, src
         copy!(b_temp, b0_temp)
@@ -67,7 +67,7 @@ end
             eval_optimized_potential(PDE, current_state, zl, index),
             zl .+ prev_zl)
 
-        b_temp .-= τ * (opA * zcomp)
+        b_temp .+= τ * (opA * zcomp)
 
         #dst, src
         copy!(zcomp, zl)
@@ -325,12 +325,11 @@ function initialize(::Type{T},
         showprogress::Bool = true,
         verbose::Int = 0,
         kwargs...) where {T <: AbstractFloat}
-
     Grid, TimeCollection, TimeMultipliers, time_steps, σset = parse_input_parameters(T,
         PDE,
         time_order,
         time_composition_substeps,
-        time_composition_index;kwargs...)
+        time_composition_index; kwargs...)
 
     Mesh = get_metadata(Grid)
     A = get_sparsematrix_A(T, Mesh, space_order)
@@ -357,15 +356,23 @@ function initialize(::Type{T},
     end
 
     A = convert(SparseMatrixCSC{ComplexF64}, A) |> CuSparseMatrixCSR
+
+    D = convert(SparseMatrixCSC{ComplexF64}, D) |> CuSparseMatrixCSR
+  
     FactorizationsComponents = Dictionary(dkeys, dvalues)
 
+    opA = sparse(drop(A, Mesh)..., fmt = :csr)
     PDESolverData = PDESolver3{T, GPUBackend, typeof(Grid), typeof(A)}(Grid,
         FactorizationsComponents,
-        A)
+        D,
+        A,
+        opA)
+
 
     Memory = initialize_memory(T, length(PDE), length(Mesh), 20)
 
-    Memory.current_state .= startup_GPU(PDE,Grid)
+
+    Memory.current_state .= startup_GPU(PDE, Grid)
 
     "is_initialized = true,
     r_tol = r_tol,
@@ -377,10 +384,18 @@ function initialize(::Type{T},
     stats=initialize_statics(),
     PDE=PDE,
     Solver = PDESolverData,
+    start_power = 0
+    start_energy = [0,0]
     time_collection=TimeCollection,
     compute_backend = GPUBackend,
     data_type = T"
-    SchrodingerSolverOptions{T, GPUBackend}(true,
+
+    start_power = system_power(Grid, Memory)
+    start_energy = T(0)
+
+    @show start_power
+
+    Opt = SchrodingerSolverOptions{T, GPUBackend}(true,
         r_tol,
         a_tol,
         fixed_innerloop_steps,
@@ -390,10 +405,15 @@ function initialize(::Type{T},
         initialize_statics(),
         PDE,
         PDESolverData,
+        start_power,
+        start_energy,
         TimeCollection,
         GPUBackend,
-        T),
-    Memory
+        T)
+
+    Opt.start_energy = system_energy(Opt, Memory)
+
+    Opt, Memory
 end
 
 "GPU Step Solver"

@@ -264,7 +264,7 @@ end
     [repeat(Grid.Ωx,outer=size(Grid.Ωy)) repeat(Grid.Ωy,inner=size(Grid.Ωx))]
 end
 
-@inline function Base.getindex(Grid::SpaceTimeGrid2D{T},col::Int,::Colon)::Vector{T} where {T<:AbstractFloat}
+@inline function Base.getindex(Grid::SpaceTimeGrid2D{T},::Colon,col::Int)::Vector{T} where {T<:AbstractFloat}
     @boundscheck begin
         if !(1 <= col <= 2)
             throw(BoundsError(Grid, col))

@@ -5,6 +5,8 @@ abstract type PaulMethod <: SolverMethod end
 
 abstract type ADIMethod <: SolverMethod end
 
+abstract type BackendMemory end
+
 OperatorOrMatrix = Union{LinearOperator,AbstractArray,UniformScaling}
 
 struct MetaKernel{T<:OperatorOrMatrix}
@@ -28,7 +30,9 @@ end
 struct PDESolver3{T<:AbstractFloat,Backend<:AbstractBackend,MetaSpaceTimeGrid<:SpaceTimeGrid,Operator<:OperatorOrMatrix}
     Grid::MetaSpaceTimeGrid
     Kernel::Dictionary{Tuple{T,T},MetaKer2}
+    opD::Operator
     opA::Operator
+    preconditionerA::Operator
 end
 
 struct PDESolver{Backend<:AbstractBackend,MetaGrid<:MetaMesh,Operator<:OperatorOrMatrix}

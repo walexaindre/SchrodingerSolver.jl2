@@ -14,6 +14,15 @@ end
     Solver.opA
 end
 
+
+@inline function get_D(Solver::PDESolver3)
+    Solver.opD
+end
+
+@inline function get_preconditionerA(Solver::PDESolver3)
+    Solver.preconditionerA
+end
+
 @inline function get_Ker(Solver::PDESolver2, σ::T, τ::T) where {T <: AbstractFloat}
     Solver.Kernel[(σ, τ)]
 end
